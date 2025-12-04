@@ -1,0 +1,1002 @@
+.animal-list li {
+  background: var(--tab-active-bg, #e3f2fd);
+  border-color: var(--tab-active-border, #90caf9);
+  outline: 2px solid var(--focus-outline);
+}
+
+a.button,
+.animal-list li {
+  margin-bottom: 10px;
+}
+
+/* Buttons (use CSS variables so appearance settings apply globally) */
+a.button,
+.button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--button-bg, var(--color-primary));
+  color: var(--button-text, var(--color-primary-contrast));
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button:hover,
+a.button:hover {
+  background: var(--button-bg-hover, var(--color-primary-600));
+}
+
+.button-primary {
+  background: var(--button-bg, var(--color-primary));
+  color: var(--button-text, var(--color-primary-contrast));
+  margin: 10px 0;
+}
+
+.button-cancel {
+  background: var(--button-cancel-bg, var(--color-danger));
+  color: var(--button-text, var(--color-primary-contrast));
+}
+
+.button-cancel:hover {
+  background: var(--button-cancel-bg-hover, var(--color-danger-700));
+}
+
+/* Page container: give a bit more vertical breathing room and stack content */
+.container {
+  width: calc(100% - 40px);
+  max-width: 1100px;
+  margin: 24px auto;
+  background: var(--page-bg, var(--surface));
+  padding: 28px 20px;
+  border-radius: 8px;
+  min-height: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Page background for the whole document (fallback to page container) */
+body {
+  background: var(--page-bg, var(--surface));
+}
+
+button:hover {
+  background: rgba(11, 102, 195, 0.08);
+}
+
+/* Global buttons (non-tab) should share the same visual style as the dashboard Actions button */
+button:not(.tab-button),
+input[type="button"],
+input[type="submit"],
+a.button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--button-bg, var(--color-primary));
+  color: var(--button-text, var(--color-primary-contrast));
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:not(.tab-button):hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+a.button:hover,
+.back:hover {
+  background: var(--button-bg-hover, var(--color-primary-600));
+}
+
+.info-box {
+  background: var(--color-success);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.back {
+  /* Styled like other action buttons but kept inline so it doesn't span the page */
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--button-bg, var(--color-primary));
+  color: var(--button-text, var(--color-primary-contrast));
+  border-radius: 6px;
+  text-decoration: none;
+  margin-bottom: 15px;
+  width: auto;
+  max-width: none;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.back:hover {
+  background: var(--button-bg-hover, var(--color-primary-600));
+  color: var(--button-text, var(--color-primary-contrast));
+}
+
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 560px;
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.modal-close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: #000;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  flex: 1;
+}
+
+#sheepForm label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+#sheepForm input,
+#sheepForm textarea {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+#sheepForm textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Table styling: show lines and wrap long text */
+.animal-table,
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.animal-table th,
+.animal-table td,
+.report-table th,
+.report-table td {
+  border: 1px solid var(--table-border, var(--report-grid));
+  padding: 12px 10px;
+  vertical-align: middle;
+  text-align: left;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.animal-table th,
+.report-table th {
+  background: var(--surface-2);
+  font-weight: bold;
+}
+
+.global-table-zebra .animal-table tbody tr:nth-child(even),
+.animal-table.zebra tbody tr:nth-child(even) {
+  background: var(--table-zebra-bg, #fcfcfc);
+}
+
+/* Highlight row under cursor and when focused (keyboard) */
+.animal-table tbody tr:hover {
+  background: var(--row-hover);
+}
+
+.animal-table tbody tr:focus {
+  outline: 2px solid var(--focus-outline);
+  background: #e1f0fb;
+}
+
+.animal-table tbody tr {
+  transition: background-color 120ms ease-in-out;
+}
+
+/* Column resizer handle (top-level) */
+.col-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.animal-table th {
+  position: relative;
+}
+
+/* Sort indicator */
+.sort-indicator {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Buttons area at top */
+.top-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 6px 0;
+  justify-content: flex-start;
+  /* keep items left-aligned */
+}
+
+.top-controls .left,
+.top-controls .right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  /* ensure inner groups are left aligned */
+}
+
+.top-controls .spacer {
+  /* hide spacer so buttons remain left aligned on the dashboard line */
+  display: none;
+}
+
+/* Highlight applied when Bulk Actions tab is used */
+.top-controls.bulk-highlight {
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12) inset, 0 6px 18px rgba(46, 125, 50, 0.06);
+  transition: box-shadow 220ms ease-in-out;
+}
+
+/* Brief pulse animation when entering bulk-selection mode */
+.top-controls.bulk-enabled {
+  animation: bulk-pulse 820ms ease-in-out;
+  box-shadow: 0 8px 30px rgba(37, 99, 156, 0.12), 0 0 0 3px rgba(37, 99, 156, 0.06) inset;
+}
+
+@keyframes bulk-pulse {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(37, 99, 156, 0.06);
+  }
+
+  40% {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 34px rgba(37, 99, 156, 0.14);
+  }
+
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 8px 30px rgba(37, 99, 156, 0.12);
+  }
+}
+
+/* Summary cards row used by actions.html */
+.summary-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin-top: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* hide native scrollbar but keep scrolling functionality */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 10+ */
+}
+
+.summary-row::-webkit-scrollbar {
+  height: 0;
+  /* hide horizontal scrollbar in WebKit-based browsers */
+}
+
+.summary-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--tab-border, #ddd);
+  background: var(--tab-bg, #fafafa);
+  cursor: pointer;
+  min-width: 84px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.summary-card .label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.summary-card .count {
+  font-size: 16px;
+  margin-left: 8px;
+  color: var(--button-bg);
+  margin-left: auto;
+}
+
+/* Active state to match dashboard tabs */
+.summary-card.active,
+.summary-card.tab-button.active {
+  background: var(--tab-active-bg, #e3f2fd);
+  border-color: var(--tab-active-border, #90caf9);
+}
+
+/* Actions page layout helpers */
+.muted {
+  color: #666;
+}
+
+.top-action-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-top: 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.actions-table-container {
+  margin-top: 18px;
+}
+
+.actions-table-controls {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.actions-search.form-input {
+  padding: 6px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 4px;
+}
+
+.actions-controls-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.section-sep {
+  margin: 18px 0;
+}
+
+.form-row {
+  margin-bottom: 8px;
+}
+
+.form-input {
+  display: block;
+  margin-top: 6px;
+  padding: 6px;
+}
+
+.form-input.full-width {
+  width: 100%;
+}
+
+.conditional-hidden {
+  display: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* Index page helpers */
+.top-action-shortcuts {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Normalize top-control buttons so they line up neatly */
+.top-controls .button,
+.top-action-shortcuts .button,
+.top-controls a.button {
+  margin: 0;
+  /* remove global margins that disrupt alignment */
+  padding: 8px 12px;
+  /* consistent padding */
+  height: 36px;
+  /* force uniform height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  box-sizing: border-box;
+}
+
+.top-controls .button-primary {
+  padding: 8px 14px;
+  height: 36px;
+}
+
+/* Ensure child elements inside left/right groups don't add extra margins */
+.top-controls .left > *,
+.top-controls .right > * {
+  margin: 0;
+}
+
+.bulk-dropdown {
+  position: relative;
+  margin-right: 0;
+  /* rely on flex gap instead of manual margin */
+}
+
+.dropdown-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.hidden {
+  display: none;
+}
+
+.import-controls {
+  margin-top: 16px;
+}
+
+/* Tabs for categories */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px 0;
+}
+
+/* Report filters and listing styles (HerdBoss-like) */
+.filterform {
+  background: #fafafa;
+  border: 1px solid #eee;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.filterform .filtercell {
+  padding: 6px 8px;
+}
+
+.choosenewfilter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.listing {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.listing th,
+.listing td {
+  border: 1px solid #e8e8e8;
+  padding: 10px;
+  background: #fff;
+}
+
+.nobreak {
+  white-space: nowrap;
+}
+
+.loading {
+  color: #666;
+}
+
+.tab-button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+/* Special green-styled tab for Bulk Actions */
+/* bulk tab styles removed — bulk actions moved to toolbar */
+
+.tab-button.active {
+  background: #e3f2fd;
+  border-color: #90caf9;
+}
+
+.tab-button:focus {
+  outline: 2px solid #90caf9;
+}
+
+/* Small badge used for statuses like "To be culled" */
+.badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 10px;
+  color: var(--text-primary);
+}
+
+.badge-to-be-culled {
+  background: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+}
+
+/* Badge for animals that have recorded breeding (bred) */
+.badge-bred {
+  background: var(--color-success);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success-text);
+}
+
+/* Badge for recently lambed ewes (nursing) */
+.badge-nursing {
+  /* unique purple tint to differentiate from bred / to-be-culled */
+  background: #8e44ad;
+  border: 1px solid rgba(120, 55, 150, 0.9);
+  color: #ffffff;
+}
+
+/* Subtle row highlight for to-be-culled animals to help scanning */
+.animal-table tbody tr.to-be-culled-row {
+  box-shadow: inset 4px 0 0 0 #ffd966;
+  /* left accent */
+}
+
+/* Quick action popup shown when clicking the badge */
+.quick-actions {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 6px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quick-actions .qa-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+}
+
+.quick-actions .qa-btn:hover {
+  background: #f5f5f5;
+}
+
+.quick-actions .qa-btn[data-action="markCulled"] {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.quick-actions .qa-btn[data-action="snooze"] {
+  color: #0b7dda;
+}
+
+/* Compact dropdown used for bulk actions */
+.bulk-dropdown .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  padding: 6px 0;
+  z-index: 1500;
+}
+
+/* Counts block shown at top of Actions dropdown */
+.actions-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 12px 10px 12px;
+  border-bottom: 1px solid var(--border, #eee);
+}
+
+.actions-counts .counts-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.actions-counts .counts-item:hover {
+  background: #f6f8fb;
+}
+
+.count-badge {
+  background: var(--button-bg, #25629c);
+  color: var(--button-text, #fff);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 8px 12px;
+  color: #222;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.dropdown-item + .dropdown-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.actions-btn {
+  position: relative;
+}
+
+#bulkSelectedCount.badge {
+  background: #25629c;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.7em;
+  padding: 2px 8px;
+  margin-left: 4px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.page-fade {
+  /* shorter, snappier duration and a smooth easing curve */
+  transition: opacity 80ms cubic-bezier(.2, 0, .1, 1), transform 80ms cubic-bezier(.2, 0, .1, 1);
+}
+
+.page-fade.page-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.page-fade.page-hidden {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+
+.pedigree-parents {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+}
+
+.pedigree-col {
+  min-width: 160px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pedigree-parent {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.pedigree-self {
+  padding: 8px 12px;
+  border: 2px solid #90caf9;
+  border-radius: 8px;
+  background: #e3f2fd;
+  font-weight: 700;
+}
+
+.pedigree-children {
+  margin-top: 8px;
+}
+
+/* Pedigree SVG connectors: crisper vector lines between parents and subject */
+.pedigree-svg-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+}
+
+.pedigree-svg {
+  width: 120px;
+  height: 40px;
+  overflow: visible;
+  display: block;
+}
+
+.pedigree-svg path {
+  stroke: #cbd5e1;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pedigree-parents {
+  position: relative;
+}
+
+/* Horizontal grid layout for pedigree (left-to-right reading) */
+.pedigree-grid {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin: 8px 0 12px 0;
+}
+
+.pedigree-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 140px;
+  max-width: 220px;
+  align-items: flex-start;
+}
+
+.pedigree-col + .pedigree-col {
+  border-left: 1px solid #e6eef6;
+  padding-left: 14px;
+}
+
+.pedigree-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  min-height: 40px;
+  border: 1px solid #e6eef6;
+  background: #fff;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.pedigree-box a {
+  color: #0b66c3;
+  text-decoration: none;
+}
+
+.pedigree-box.pedigree-missing {
+  color: #666;
+  font-weight: 500;
+  background: #fafafa;
+}
+
+/* Make the subject (rightmost) visually distinct */
+.pedigree-col:first-child .pedigree-box {
+  border: 2px solid #90caf9;
+  background: #e8f3ff;
+}
+
+svg.pedigree-connectors {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+/* Responsive: stack parents on narrow screens */
+@media (max-width: 640px) {
+  .pedigree-parents {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pedigree-svg-wrap {
+    display: none;
+  }
+}
+
+/* Snackbar notification (transient, bottom-center) */
+.snackbar-container {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.snackbar {
+  pointer-events: auto;
+  min-width: 220px;
+  max-width: 720px;
+  background: rgba(34, 34, 34, 0.95);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  font-size: 14px;
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.snackbar .snack-action {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.snackbar.hide {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.snackbar.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+/* Detail page breadcrumb and page transition styles */
+.detail-breadcrumb {
+  font-size: 13px;
+  color: #555;
+  margin-left: 8px;
+  align-self: center;
+}
+
+/* Note: .page-fade is defined earlier with a short transition to
+   provide a snappy fade. Avoid defining it twice to prevent
+   contradictory rules. */
+
+/* Print styles: hide interactive chrome and print only the report area. */
+@media print {
+
+  /* hide everything by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* make the printable report area visible */
+  #reportPrintArea,
+  #reportPrintArea * {
+    visibility: visible !important;
+  }
+
+  /* ensure the printable area is at page top and uses full width */
+  #reportPrintArea {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* simplify container visuals */
+  .container {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* hide controls inside the printable area that are interactive */
+  #reportPrintArea .button,
+  #reportPrintArea input,
+  #reportPrintArea select,
+  #reportPrintArea textarea,
+  #reportPrintArea a.button {
+    display: none !important;
+  }
+
+  /* tables: compact and black-on-white */
+  .report-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 12px !important;
+    color: #000 !important;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #666 !important;
+    padding: 6px !important;
+    background: transparent !important;
+  }
+
+  /* avoid breaking rows across pages */
+  .report-table tr,
+  .report-table td,
+  .report-table th {
+    page-break-inside: avoid !important;
+  }
+
+  /* hide other page sections */
+  .back,
+  #reportImportControls,
+  #reportControls,
+  #reportFilters,
+  #reportText,
+  #reportList,
+  h2,
+  textarea {
+    display: none !important;
+  }
+
+  /* ensure charts scale nicely */
+  #reportSummary svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* page margins */
+  @page {
+    margin: 12mm;
+  }
+}

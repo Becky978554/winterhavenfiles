@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sheep Details</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="index.html" class="back">&larr; Back to Dashboard</a>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <button id="prevSheepBtn" aria-label="Previous sheep" title="Previous sheep" class="button"
+          style="font-size:16px;padding:6px 10px;">&larr;</button>
+        <button id="nextSheepBtn" aria-label="Next sheep" title="Next sheep" class="button"
+          style="font-size:16px;padding:6px 10px;">&rarr;</button>
+        <button id="saveChangesTop" class="button-primary" title="Save"
+          style="margin-left:8px;padding:6px 10px;">Save</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="sheepTitleWrap" style="display:flex;align-items:center;gap:8px;">
+        <h1 id="sheepTitle" style="margin:0;">Sheep Name / Ear Tag</h1>
+        <button id="editNameBtn" type="button" class="button" style="padding:6px 8px;font-size:13px;">Edit</button>
+        <div id="nameEdit" style="display:none;align-items:center;gap:6px;">
+          <input id="nameInput" type="text" aria-label="Sheep name"
+            style="padding:6px;border:1px solid #ddd;border-radius:4px;">
+          <button id="saveNameBtn" class="button">Save</button>
+          <button id="cancelNameBtn" class="button button-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="detailBreadcrumb" class="detail-breadcrumb" aria-live="polite" style="margin-left:auto;">&nbsp;</div>
+    </div>
+    <div class="info-box">
+      <p><strong>Breed:</strong> <span id="breed">N/A</span></p>
+      <p><strong>Age:</strong> <span id="age">N/A</span></p>
+      <p><strong>Weight:</strong> <span id="weight">N/A</span></p>
+      <p><strong>Birth Date:</strong> <input type="date" id="birthDate" aria-label="Sheep birth date"></p>
+      <p><strong>Expected Due Date:</strong> <span id="expectedDueDate">N/A</span></p>
+      <p><strong>Sex:</strong>
+        <select id="sex">
+          <option value="Unknown">Unknown</option>
+          <option value="Ewe">Ewe</option>
+          <option value="Ram">Ram</option>
+        </select>
+      </p>
+      <p><strong>Status:</strong>
+        <select id="status">
+          <option value="active">Active</option>
+          <option value="to-be-culled">To Be Culled</option>
+          <option value="culled">Culled</option>
+          <option value="sold">Sold</option>
+        </select>
+      </p>
+      <p><strong>Sire:</strong> <input type="text" id="sire" placeholder="Sire name or tag"></p>
+      <p><strong>Dam:</strong> <input type="text" id="dam" placeholder="Dam name or tag"></p>
+      <div id="breedingHistoryBox" class="breeding-history-box" style="margin-top:12px;">
+        <h3 style="margin:6px 0 8px 0">Breeding History</h3>
+        <div id="breedingHistory" style="border:1px solid #eee;padding:8px;background:#fff;min-height:40px;">No breeding
+          history available.</div>
+      </div>
+
+      <p><button id="recordBreedingBtn" class="button">Record Breeding</button></p>
+      <div id="autoPedigree" style="border:1px solid #ddd;padding:8px;margin-top:8px;background:#fafafa;"></div>
+
+      <div class="lambing-history-box" style="margin-top:12px;">
+        <h3 style="margin:6px 0 8px 0">Lambing History</h3>
+        <div id="lambingHistory" style="border:1px solid #eee;padding:8px;background:#fff;min-height:40px;">No lambing
+          history available.</div>
+      </div>
+
+      <p><strong>Notes:</strong> <textarea id="notes" style="width: 100%; min-height: 60px;"></textarea></p>
+      <div id="weightsPanel" style="margin-top:12px;border:1px solid #eee;padding:8px;background:#fff;">
+        <h3 style="margin:6px 0 8px 0">Weight History</h3>
+        <div id="weightsControls" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+          <label style="display:flex;gap:6px;align-items:center;"><span>Date</span><input type="date"
+              id="weightDateInput"></label>
+          <label style="display:flex;gap:6px;align-items:center;"><span>Weight</span><input type="number"
+              id="weightValueInput" placeholder="lbs" style="width:100px;"></label>
+          <button id="addWeightBtn" class="button">Add Weight</button>
+          <button id="clearWeightsBtn" class="button button-cancel" title="Remove all weight entries">Clear All</button>
+        </div>
+        <div id="weightsList" style="border-top:1px solid #f0f0f0;padding-top:8px;min-height:40px;">No weight records
+          yet.</div>
+        <div id="weightChartWrap" style="margin-top:10px;">
+          <canvas id="weightChart" width="700" height="240"
+            style="width:100%;max-width:700px;border:1px solid #f4f4f4;background:#fff;"></canvas>
+        </div>
+      </div>
+    </div>
+
+
+    <button id="saveChanges" class="button-primary">Save Changes</button>
+
+    <div id="breedingHistoryBottomBox" class="breeding-history-bottom" style="margin-top:18px;">
+      <h2>Breeding</h2>
+      <div id="breedingHistoryBottom" style="border:1px solid #eee;padding:8px;background:#fff;min-height:40px;">No
+        breeding history available.</div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        try {
+          // Decide where the back link should go based on the `from` URL param.
+          // If `from=actions` we return to Actions (preserving `tab` if present).
+          // Otherwise default to the dashboard (index.html).
+          const params = new URLSearchParams(window.location.search);
+          const from = params.get('from');
+          const tab = params.get('tab');
+          const backLink = document.querySelector('a.back');
+          if (backLink) {
+            if (from === 'actions') {
+              backLink.href = 'actions.html' + (tab ? ('?tab=' + encodeURIComponent(tab)) : '');
+              backLink.textContent = '\u2190 Back to Actions';
+            } else {
+              backLink.href = 'index.html';
+              backLink.textContent = '\u2190 Back to Dashboard';
+            }
+
+            // Ensure 'Back to Dashboard' always navigates to the dashboard.
+            try {
+              backLink.addEventListener('click', function (ev) {
+                try {
+                  const href = (backLink.getAttribute && backLink.getAttribute('href')) || '';
+                  // If this link points to the dashboard, allow normal navigation to index.html
+                  if (href.indexOf('index.html') !== -1 || href === '/') {
+                    return; // follow the href normally
+                  }
+                  // For other destinations (e.g., Actions), prefer history.back when safe
+                  const sameOriginRef = document.referrer && document.referrer.indexOf(location.origin) === 0;
+                  if (history.length > 1 && sameOriginRef) {
+                    ev.preventDefault();
+                    history.back();
+                    return;
+                  }
+                } catch (e) { /* fall back to href navigation */ }
+                // default: allow browser to follow the link's href
+              });
+            } catch (e) { /* ignore event wiring errors */ }
+          }
+        } catch (e) { }
+        loadSheepDetail();
+        // Save handler for the detail page is attached inside `loadSheepDetail()` in script.js
+      });
+    </script>
+    <!-- Breeding modal (same as index) -->
+    <div id="breedingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="breedingClose">&times;</span>
+        <h2 id="breedingModalTitle">Record Breeding</h2>
+        <div style="margin-bottom:8px;">
+          <label for="breedingSire"><strong>Select Sire (Ram):</strong></label>
+          <select id="breedingSire" style="width:100%; padding:8px; margin-top:6px;"></select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label for="breedingDate"><strong>Bred Date:</strong></label>
+          <input type="date" id="breedingDate" style="display:block; margin-top:6px;">
+        </div>
+        <div id="breedingTargets" style="margin-bottom:8px; color:#555;"></div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+          <button id="breedingCancel" class="button-cancel">Cancel</button>
+          <button id="breedingConfirmBtn" class="button-primary">Apply Breeding</button>
+        </div>
+      </div>
+    </div>
+    <!-- Sale Modal (shared) -->
+    <div id="saleModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="saleModalClose">&times;</span>
+        <h2>Record Sale</h2>
+        <div style="margin-top:8px;">
+          <div style="margin-bottom:8px;">
+            <label><input type="radio" name="saleMode" value="bulk" checked> Bulk sale (one total price)</label>
+            <label style="margin-left:12px;"><input type="radio" name="saleMode" value="per"> Per-animal prices</label>
+          </div>
+          <div id="saleBulkRow" style="margin-bottom:8px;">
+            <label for="saleBulkPrice"><strong>Total sale amount:</strong></label>
+            <input id="saleBulkPrice" type="text" placeholder="e.g. 1200" style="margin-left:8px;padding:6px;" />
+          </div>
+          <div id="salePerAnimalRow" style="margin-bottom:8px; display:none;">
+            <div id="salePerAnimalContainer"
+              style="max-height:220px; overflow:auto; border:1px solid #eee; padding:6px; background:#fff;"></div>
+          </div>
+          <div style="margin-bottom:8px;color:#555;"><strong>Selected animals:</strong> <span
+              id="saleSelectedList"></span></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button id="saleCancelBtn" class="button-cancel">Cancel</button>
+          <button id="saleConfirmBtn" class="button-primary">Confirm Sale</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

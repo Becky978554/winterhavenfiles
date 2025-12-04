@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Settings — Sheep Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Settings</h1>
+    <form id="settingsForm">
+      <label for="gestationDays"><strong>Gestation length (days):</strong></label>
+      <input type="number" id="gestationDays" min="1" style="width:120px;" />
+      <div style="margin-top:8px;">
+        <label for="nursingWindowDays"><strong>Nursing window (days):</strong></label>
+        <input type="number" id="nursingWindowDays" min="0" style="width:120px; margin-left:8px;" />
+        <p style="color:#666; font-size:0.9rem; margin-top:6px;">How many days after lambing a ewe is considered
+          "Nursing" (default 90).</p>
+      </div>
+      <div style="margin-top:10px;">
+        <label for="pedigreeGenerations"><strong>Pedigree generations to show:</strong></label>
+        <select id="pedigreeGenerations" style="width:120px; margin-left:8px;">
+          <option value="2">2 (parents + grandparents)</option>
+          <option value="3">3 (add great-grandparents)</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+        <p style="color:#666; font-size:0.9rem; margin-top:6px;">Controls how many ancestor generations are shown when
+          using Auto Pedigree on a sheep's detail page.</p>
+      </div>
+      <p style="color:#666; font-size:0.95rem;">Used to calculate expected due dates when recording breeding. Default is
+        147 days.</p>
+      <div style="margin-top:12px;">
+        <button type="submit" class="button-primary">Save</button>
+        <a href="index.html" class="button button-cancel" style="margin-left:8px;">Back</a>
+      </div>
+    </form>
+    <hr style="margin:16px 0;">
+    <h2>Dashboard Columns</h2>
+    <form id="columnsForm">
+      <label for="columnsTabSelect"><strong>Tab:</strong></label>
+      <select id="columnsTabSelect" style="margin-bottom:8px;">
+        <option value="global">Global (all tabs)</option>
+        <option value="active-ewes">Active Ewes</option>
+        <option value="active-rams">Active Rams</option>
+        <option value="current-lambs">Current Lambs</option>
+        <option value="culled">Culled</option>
+        <option value="to-be-culled">To Be Culled</option>
+        <option value="sold">Sold</option>
+        <option value="all">All</option>
+      </select>
+      <div style="display:flex; flex-direction:column; gap:8px; max-width:520px;">
+        <label><input type="checkbox" id="colBreed"> Show Breed</label>
+        <label><input type="checkbox" id="colSire"> Show Sire</label>
+        <label><input type="checkbox" id="colDam"> Show Dam</label>
+        <label><input type="checkbox" id="colSireSire"> Show Sire-Sire (grandfather)</label>
+        <label><input type="checkbox" id="colNotes"> Show Notes</label>
+        <label><input type="checkbox" id="colAge"> Show Age</label>
+        <label><input type="checkbox" id="colWeight"> Show Weight</label>
+        <label><input type="checkbox" id="colSex"> Show Sex</label>
+        <label><input type="checkbox" id="colPastLambing"> Show Past Lambing (Single / Twin / Triplet / Other)</label>
+        <label><input type="checkbox" id="colPastBred"> Show Past Bred Date</label>
+        <label><input type="checkbox" id="colDaysUntil"> Show Days Until Lambing</label>
+        <label><input type="checkbox" id="colDaysPost"> Show Days Post-Lambing</label>
+        <label><input type="checkbox" id="colExpectedDue"> Show Expected Due Date</label>
+      </div>
+      <div style="margin-top:12px;">
+        <button id="saveColumns" class="button-primary">Save Columns</button>
+      </div>
+    </form>
+    <hr style="margin:16px 0;">
+    <p style="color:#555;">Tip: You can also set this value from the console while
+      testing:<br><code>localStorage.setItem('gestationDays', '147')</code></p>
+    <hr style="margin:16px 0;">
+    <h2>Diagnostics</h2>
+    <div style="margin-bottom:8px;">
+      <button id="runDiagnostics" class="button">Run Diagnostics</button>
+      <div id="diagResults" style="margin-top:8px; white-space:pre-wrap; font-family:monospace; color:#222;"></div>
+    </div>
+    <hr style="margin:16px 0;">
+    <hr style="margin:16px 0;">
+    <h2 style="color:#a33;">Danger Zone</h2>
+    <div style="margin-bottom:18px;">
+      <p style="color:#a33;">Delete all animals will permanently remove all sheep records (<code>sheep-*</code>), any
+        per-animal notes (<code>notes_*</code>) and the master <code>sheepList</code> from localStorage. This cannot be
+        undone.</p>
+      <button id="deleteAllAnimalsBtn" class="button button-danger">Delete All Animals</button>
+    </div>
+    <h2>Appearance</h2>
+    <div style="margin-bottom:12px;">
+      <label for="siteThemeSelect"><strong>Theme:</strong></label>
+      <select id="siteThemeSelect" style="margin-left:8px;">
+        <option value="default">Default (Green)</option>
+        <option value="blue">Blue</option>
+        <option value="dark">Dark</option>
+      </select>
+      <button id="applyThemeBtn" class="button" style="margin-left:8px;">Apply</button>
+      <p style="color:#666; font-size:0.9rem; margin-top:8px;">Choose a color theme for the app. Changes persist across
+        pages.</p>
+    </div>
+    <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
+      <label style="margin-right:8px;"><strong>Presets:</strong></label>
+      <button type="button" class="button" id="preset_default" data-preset="default" title="Default">
+        <span
+          style="display:inline-block;width:18px;height:12px;background:#2f855a;border-radius:2px;margin-right:8px;vertical-align:middle;"></span>
+        Default
+      </button>
+      <button type="button" class="button" id="preset_blue" data-preset="blue" title="Blue">
+        <span
+          style="display:inline-block;width:18px;height:12px;background:#0b66c3;border-radius:2px;margin-right:8px;vertical-align:middle;"></span>
+        Blue
+      </button>
+      <button type="button" class="button" id="preset_dark" data-preset="dark" title="Dark">
+        <span
+          style="display:inline-block;width:18px;height:12px;background:#121212;border-radius:2px;margin-right:8px;vertical-align:middle;"></span>
+        Dark
+      </button>
+      <button type="button" id="restoreDefaultPreset" class="button" style="margin-left:auto;">Restore Default
+        Preset</button>
+    </div>
+    <div style="margin-bottom:18px;">
+      <h3 style="margin-top:0;">Customize Appearance</h3>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <div style="min-width:220px;">
+          <label><strong>Page background</strong></label>
+          <input type="color" id="appearance_pageBg" style="width:100%; height:36px; margin-top:6px;" />
+        </div>
+        <div style="min-width:220px;">
+          <label><strong>Button background</strong></label>
+          <input type="color" id="appearance_buttonBg" style="width:100%; height:36px; margin-top:6px;" />
+        </div>
+        <div style="min-width:220px;">
+          <label><strong>Button text</strong></label>
+          <input type="color" id="appearance_buttonText" style="width:100%; height:36px; margin-top:6px;" />
+        </div>
+        <div style="min-width:220px;">
+          <label><strong>Button hover (optional)</strong></label>
+          <input type="color" id="appearance_buttonHover" style="width:100%; height:36px; margin-top:6px;" />
+        </div>
+        <div style="min-width:220px;">
+          <label><strong>Cancel button bg</strong></label>
+          <input type="color" id="appearance_buttonCancelBg" style="width:100%; height:36px; margin-top:6px;" />
+        </div>
+        <div style="min-width:220px;">
+          <label><strong>Table border color</strong></label>
+          <input type="color" id="appearance_tableBorder" style="width:100%; height:36px; margin-top:6px;" />
+        </div>
+        <div style="min-width:220px; display:flex; align-items:center; gap:8px;">
+          <label style="margin:0;"><strong>Alternate row shading (zebra)</strong></label>
+          <input type="checkbox" id="appearance_tableZebra" style="width:20px; height:20px;" />
+        </div>
+        <div style="min-width:180px;">
+          <label><strong>Page zoom</strong></label>
+          <select id="appearance_zoom" style="width:100%; margin-top:6px;">
+            <option value="0.8">80%</option>
+            <option value="0.9">90%</option>
+            <option value="1" selected>100%</option>
+            <option value="1.1">110%</option>
+            <option value="1.25">125%</option>
+            <option value="1.5">150%</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        <button id="applyAppearanceBtn" class="button">Apply Appearance</button>
+        <button id="saveAppearanceBtn" class="button-primary" style="margin-left:8px;">Save Appearance</button>
+        <button id="resetAppearanceBtn" class="button-cancel" style="margin-left:8px;">Reset Appearance</button>
+      </div>
+      <p style="color:#666; font-size:0.9rem; margin-top:8px;">Customize page background, primary button colors and page
+        zoom. "Apply" previews changes immediately; "Save" persists them.</p>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    (function () {
+      const input = document.getElementById('gestationDays');
+      const pedigreeSel = document.getElementById('pedigreeGenerations');
+      function load() {
+        const raw = localStorage.getItem('gestationDays');
+        const v = parseInt(raw, 10);
+        input.value = (isNaN(v) || v <= 0) ? 147 : v;
+
+        // load nursing window (days) setting
+        try {
+          const nw = parseInt(localStorage.getItem('nursingWindowDays'), 10);
+          document.getElementById('nursingWindowDays').value = (isNaN(nw) || nw < 0) ? 90 : nw;
+        } catch (e) { document.getElementById('nursingWindowDays').value = 90; }
+
+        // load pedigree generations setting (default to 3)
+        try {
+          const pg = parseInt(localStorage.getItem('pedigreeGenerations'), 10);
+          pedigreeSel.value = (isNaN(pg) || pg < 1) ? '3' : String(pg);
+        } catch (e) { pedigreeSel.value = '3'; }
+
+        // load dashboard column settings (support per-tab settings)
+        try {
+          const colsRaw = localStorage.getItem('dashboardColumns');
+          let parsed = colsRaw ? JSON.parse(colsRaw) : null;
+          // If legacy single-map format, treat as global
+          if (parsed && Object.keys(parsed).length && Object.keys(parsed).every(k => typeof parsed[k] === 'boolean')) {
+            parsed = { global: parsed };
+          }
+          // default to global if no per-tab found
+          const selectedTab = document.getElementById('columnsTabSelect').value || 'global';
+          const map = (parsed && parsed[selectedTab]) ? parsed[selectedTab] : (parsed && parsed.global ? parsed.global : null);
+          document.getElementById('colBreed').checked = !(map && map.breed === false);
+          document.getElementById('colSire').checked = !(map && map.sire === false);
+          document.getElementById('colDam').checked = !(map && map.dam === false);
+          document.getElementById('colSireSire').checked = !(map && map.sireSire === false);
+          document.getElementById('colNotes').checked = !(map && map.notes === false);
+          document.getElementById('colAge').checked = !(map && map.age === false);
+          document.getElementById('colWeight').checked = !(map && map.weight === false);
+          document.getElementById('colSex').checked = !(map && map.sex === false);
+          document.getElementById('colPastLambing').checked = !(map && map.pastLambing === false);
+          document.getElementById('colPastBred').checked = !(map && map.bredDate === false);
+          document.getElementById('colDaysUntil').checked = !(map && map.daysUntil === false);
+          document.getElementById('colDaysPost').checked = !(map && map.daysPost === false);
+          document.getElementById('colExpectedDue').checked = !(map && map.expectedDueDate === false);
+        } catch (e) { /* ignore */ }
+      }
+      function save(e) {
+        e.preventDefault();
+        const v = parseInt(input.value, 10);
+        if (isNaN(v) || v <= 0) return alert('Please enter a positive number of days.');
+        localStorage.setItem('gestationDays', String(v));
+        // save nursing window if present
+        try {
+          const nwv = parseInt(document.getElementById('nursingWindowDays').value, 10);
+          if (!isNaN(nwv) && nwv >= 0) localStorage.setItem('nursingWindowDays', String(nwv));
+        } catch (e) { }
+        try {
+          const pg = parseInt(pedigreeSel.value, 10);
+          if (!isNaN(pg) && pg >= 1) localStorage.setItem('pedigreeGenerations', String(pg));
+        } catch (e) { }
+        alert('Gestation days saved.');
+      }
+
+      function saveCols(ev) {
+        ev && ev.preventDefault();
+        const map = {
+          breed: !!document.getElementById('colBreed').checked,
+          sire: !!document.getElementById('colSire').checked,
+          dam: !!document.getElementById('colDam').checked,
+          sireSire: !!document.getElementById('colSireSire').checked,
+          notes: !!document.getElementById('colNotes').checked,
+          age: !!document.getElementById('colAge').checked,
+          weight: !!document.getElementById('colWeight').checked,
+          sex: !!document.getElementById('colSex').checked,
+          pastLambing: !!document.getElementById('colPastLambing').checked,
+          bredDate: !!document.getElementById('colPastBred').checked,
+          daysUntil: !!document.getElementById('colDaysUntil').checked,
+          daysPost: !!document.getElementById('colDaysPost').checked,
+          expectedDueDate: !!document.getElementById('colExpectedDue').checked,
+          /* 'Actions' column is not configurable from dashboard settings anymore */
+        };
+        try {
+          // Load existing and migrate legacy shape if necessary
+          const raw = localStorage.getItem('dashboardColumns');
+          let parsed = raw ? JSON.parse(raw) : {};
+          if (parsed && Object.keys(parsed).length && Object.keys(parsed).every(k => typeof parsed[k] === 'boolean')) parsed = { global: parsed };
+          const key = document.getElementById('columnsTabSelect').value || 'global';
+          parsed = parsed || {};
+          parsed[key] = map;
+          localStorage.setItem('dashboardColumns', JSON.stringify(parsed));
+        } catch (e) { console.warn(e); }
+        alert('Dashboard column preferences saved for selected tab. Return to the dashboard to see changes.');
+      }
+
+      document.getElementById('settingsForm').addEventListener('submit', save);
+      document.getElementById('columnsForm').addEventListener('submit', saveCols);
+      document.getElementById('saveColumns').addEventListener('click', saveCols);
+      document.getElementById('columnsTabSelect').addEventListener('change', load);
+      window.addEventListener('DOMContentLoaded', load);
+      // Theme controls
+      try {
+        const themeSel = document.getElementById('siteThemeSelect');
+        const applyBtn = document.getElementById('applyThemeBtn');
+        // initialize selection from saved value
+        try { const st = localStorage.getItem('siteTheme') || 'default'; if (themeSel) themeSel.value = st; } catch (e) { }
+        if (applyBtn && themeSel) applyBtn.addEventListener('click', () => {
+          try {
+            const val = themeSel.value || 'default';
+            localStorage.setItem('siteTheme', val);
+            // call applyTheme if available globally
+            try { if (window.applyTheme) window.applyTheme(val); else alert('Theme saved. Reload pages to apply.'); } catch (e) { }
+            alert('Theme saved.');
+          } catch (e) { console.warn(e); alert('Failed to save theme'); }
+        });
+      } catch (e) { }
+      // Appearance customization controls
+      try {
+        const pageBg = document.getElementById('appearance_pageBg');
+        const btnBg = document.getElementById('appearance_buttonBg');
+        const btnText = document.getElementById('appearance_buttonText');
+        const btnHover = document.getElementById('appearance_buttonHover');
+        const btnCancelBg = document.getElementById('appearance_buttonCancelBg');
+        const zoomSel = document.getElementById('appearance_zoom');
+        const applyAppBtn = document.getElementById('applyAppearanceBtn');
+        const saveAppBtn = document.getElementById('saveAppearanceBtn');
+        const resetAppBtn = document.getElementById('resetAppearanceBtn');
+
+        const loadAppearanceToControls = () => {
+          try {
+            const raw = localStorage.getItem('appearanceSettings');
+            const s = raw ? JSON.parse(raw) : {};
+            if (pageBg && s.pageBg) pageBg.value = s.pageBg;
+            if (btnBg && s.buttonBg) btnBg.value = s.buttonBg;
+            if (btnText && s.buttonText) btnText.value = s.buttonText;
+            if (btnHover && s.buttonBgHover) btnHover.value = s.buttonBgHover;
+            if (btnCancelBg && s.buttonCancelBg) btnCancelBg.value = s.buttonCancelBg;
+            if (document.getElementById('appearance_tableBorder') && s.tableBorder) document.getElementById('appearance_tableBorder').value = s.tableBorder;
+            if (document.getElementById('appearance_tableZebra') && typeof s.tableZebra !== 'undefined') document.getElementById('appearance_tableZebra').checked = !!s.tableZebra;
+            if (zoomSel && s.zoom) zoomSel.value = String(s.zoom);
+          } catch (e) { }
+        };
+
+        const buildAppearanceFromControls = () => {
+          const out = {};
+          if (pageBg && pageBg.value) out.pageBg = pageBg.value;
+          if (btnBg && btnBg.value) out.buttonBg = btnBg.value;
+          if (btnText && btnText.value) out.buttonText = btnText.value;
+          if (btnHover && btnHover.value) out.buttonBgHover = btnHover.value;
+          if (btnCancelBg && btnCancelBg.value) out.buttonCancelBg = btnCancelBg.value;
+          const tableBorderEl = document.getElementById('appearance_tableBorder');
+          if (tableBorderEl && tableBorderEl.value) out.tableBorder = tableBorderEl.value;
+          const tableZebraEl = document.getElementById('appearance_tableZebra');
+          if (tableZebraEl) out.tableZebra = !!tableZebraEl.checked;
+          if (zoomSel && zoomSel.value) out.zoom = parseFloat(zoomSel.value) || 1;
+          return out;
+        };
+
+        if (applyAppBtn) applyAppBtn.addEventListener('click', (ev) => {
+          ev && ev.preventDefault();
+          const a = buildAppearanceFromControls();
+          try { if (window.applyAppearance) { window.applyAppearance(a); } else { alert('Appearance preview applied (reload to persist).'); } } catch (e) { }
+        });
+
+        if (saveAppBtn) saveAppBtn.addEventListener('click', (ev) => {
+          ev && ev.preventDefault();
+          const a = buildAppearanceFromControls();
+          try { localStorage.setItem('appearanceSettings', JSON.stringify(a)); } catch (e) { }
+          try { if (window.applyAppearance) window.applyAppearance(a); } catch (e) { }
+          alert('Appearance saved.');
+        });
+
+        if (resetAppBtn) resetAppBtn.addEventListener('click', (ev) => {
+          ev && ev.preventDefault();
+          if (!confirm('Restore the Default appearance preset?')) return;
+          try {
+            // restore named default preset and persist it
+            if (window.applyPreset) {
+              window.applyPreset('default', true);
+            } else {
+              // fallback: clear and reapply saved theme
+              localStorage.removeItem('appearanceSettings');
+              if (window.applyAppearance) window.applyAppearance({});
+            }
+          } catch (e) { }
+          loadAppearanceToControls();
+          alert('Appearance restored to Default preset.');
+        });
+
+        // Wire preset swatch buttons (populate controls and preview)
+        try {
+          ['default', 'blue', 'dark'].forEach(p => {
+            const btn = document.getElementById('preset_' + p);
+            if (btn) btn.addEventListener('click', (ev) => {
+              ev && ev.preventDefault();
+              try {
+                const preset = (window.getAppearancePreset && window.getAppearancePreset(p)) || {};
+                // populate controls
+                if (pageBg && preset.pageBg) pageBg.value = preset.pageBg;
+                if (btnBg && preset.buttonBg) btnBg.value = preset.buttonBg;
+                if (btnText && preset.buttonText) btnText.value = preset.buttonText;
+                if (btnHover && preset.buttonBgHover) btnHover.value = preset.buttonBgHover;
+                if (btnCancelBg && preset.buttonCancelBg) btnCancelBg.value = preset.buttonCancelBg;
+                if (zoomSel && typeof preset.zoom !== 'undefined') zoomSel.value = String(preset.zoom);
+                // preview
+                if (window.applyAppearance) window.applyAppearance(preset);
+              } catch (e) { console.warn(e); }
+            });
+          });
+          const restoreBtn = document.getElementById('restoreDefaultPreset');
+          if (restoreBtn) restoreBtn.addEventListener('click', (ev) => {
+            ev && ev.preventDefault();
+            if (!confirm('Restore the Default appearance preset and save it?')) return;
+            try { if (window.applyPreset) window.applyPreset('default', true); } catch (e) { }
+            loadAppearanceToControls();
+            alert('Default preset applied and saved.');
+          });
+        } catch (e) { }
+
+        // initialize control values from saved appearance
+        loadAppearanceToControls();
+      } catch (e) { }
+      // Diagnostics
+      document.getElementById('runDiagnostics').addEventListener('click', () => {
+        try {
+          const scanned = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.indexOf('sheep-') === 0) {
+              try { scanned.push(JSON.parse(localStorage.getItem(k))); } catch (e) { /* ignore */ }
+            }
+          }
+          const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+          const masterMap = {};
+          master.forEach(m => { if (m && m.id) masterMap[m.id] = m; });
+          const missingSex = scanned.filter(s => !s || !s.sex);
+          const missingStatus = scanned.filter(s => !s || !s.status);
+          const idsScanned = scanned.map(s => s && s.id).filter(Boolean);
+          const idsMaster = master.map(s => s && s.id).filter(Boolean);
+          const inScannedNotMaster = idsScanned.filter(id => idsMaster.indexOf(id) === -1);
+          const inMasterNotScanned = idsMaster.filter(id => idsScanned.indexOf(id) === -1);
+          const out = [];
+          out.push(`Scanned sheep- keys: ${scanned.length}`);
+          out.push(`Master sheepList entries: ${master.length}`);
+          out.push(`Missing sex on ${missingSex.length} scanned records (examples: ${missingSex.slice(0, 5).map(s => s && s.id).join(', ')})`);
+          out.push(`Missing status on ${missingStatus.length} scanned records (examples: ${missingStatus.slice(0, 5).map(s => s && s.id).join(', ')})`);
+          out.push(`IDs in scanned but not in master: ${inScannedNotMaster.length} (examples: ${inScannedNotMaster.slice(0, 10).join(', ')})`);
+          out.push(`IDs in master but not scanned: ${inMasterNotScanned.length} (examples: ${inMasterNotScanned.slice(0, 10).join(', ')})`);
+          document.getElementById('diagResults').textContent = out.join('\n');
+          console.log('Diagnostics result', { scannedCount: scanned.length, masterCount: master.length, missingSex: missingSex.map(s => s && s.id), missingStatus: missingStatus.map(s => s && s.id), inScannedNotMaster, inMasterNotScanned });
+        } catch (e) { document.getElementById('diagResults').textContent = 'Diagnostics failed: ' + String(e); console.warn(e); }
+      });
+
+      // Delete All Animals (Danger Zone) — two-step confirmation
+      try {
+        const delBtn = document.getElementById('deleteAllAnimalsBtn');
+        if (delBtn) {
+          delBtn.addEventListener('click', (ev) => {
+            ev && ev.preventDefault();
+            // Step 1: simple confirm
+            if (!confirm('Are you SURE you want to DELETE ALL animals? This will remove every sheep record and cannot be undone.')) return;
+            // Step 2: typed confirmation for safety
+            try {
+              const typed = prompt('Type DELETE to confirm permanent removal of ALL animals');
+              if (!typed || typed.trim().toUpperCase() !== 'DELETE') { alert('Deletion cancelled (confirmation text not matched).'); return; }
+            } catch (e) { if (!confirm('Prompt failed; proceed with deletion of all animals?')) return; }
+
+            // Perform deletion: remove keys prefixed with 'sheep-' and 'notes_', and remove 'sheepList'
+            try {
+              const keysToRemove = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (!k) continue;
+                if (k.indexOf('sheep-') === 0 || k.indexOf('notes_') === 0) keysToRemove.push(k);
+              }
+              keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (e) { } });
+              try { localStorage.removeItem('sheepList'); } catch (e) { }
+              alert('All animal records removed. Redirecting to Dashboard.');
+              try { window.location.href = 'index.html'; } catch (e) { location.reload(); }
+            } catch (e) { console.warn('deleteAllAnimals failed', e); alert('Failed to delete animals; see console.'); }
+          });
+        }
+      } catch (e) { console.warn('deleteAllAnimals wiring failed', e); }
+    })();
+  </script>
+</body>
+
+</html>

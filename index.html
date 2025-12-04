@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sheep Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Sheep Management Dashboard</h1>
+
+    <div class="top-controls">
+      <div class="left">
+        <!-- Import controls moved to Reports page -->
+      </div>
+      <div class="spacer"></div>
+      <div class="right">
+        <div class="bulk-dropdown">
+          <a id="bulkDropdownToggle" class="button" href="actions.html" aria-expanded="false"
+            aria-controls="bulkDropdownMenu">Actions</a>
+          <div id="bulkDropdownMenu" class="dropdown-menu" style="display:none;">
+            <div class="dropdown-inner">
+              <!-- Dropdown simplified: actions moved to bulk toolbar -->
+            </div>
+          </div>
+        </div>
+        <!-- Bulk toolbar removed: actions are shown as tabs under Actions button -->
+        <div id="topActionShortcuts" class="top-action-shortcuts">
+          <a id="addSheepBtn" class="button button-primary" role="button">+ Add New Sheep</a>
+          <a id="addLambingBtn" class="button" role="button">+ Lambing</a>
+          <a class="button" href="finance.html">Finances</a>
+          <a class="button" href="settings.html">Settings</a>
+          <a class="button" href="reports.html">Write Reports</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lambing Modal -->
+    <div id="lambingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="lambingClose">&times;</span>
+        <h2>Record Lambing</h2>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingCount"><strong>Number of lambs:</strong></label>
+          <select id="lambingCount" style="display:block; margin-top:6px; padding:6px;">
+            <option value="1">Single (1)</option>
+            <option value="2">Twin (2)</option>
+            <option value="3">Triplet (3)</option>
+            <option value="other">Other (4+)</option>
+          </select>
+          <input type="number" id="lambingCountOther" min="4" placeholder="Enter number (4+)"
+            style="display:none; margin-top:6px; padding:6px;" />
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingDate"><strong>Birth Date:</strong></label>
+          <input type="date" id="lambingDate" style="display:block; margin-top:6px; padding:6px;" />
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingMother"><strong>Mother (Ewe):</strong></label>
+          <select id="lambingMother" style="display:block; margin-top:6px; padding:6px; width:100%;"></select>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingSire"><strong>Father (Ram) — optional:</strong></label>
+          <select id="lambingSire" style="display:block; margin-top:6px; padding:6px; width:100%;"></select>
+        </div>
+
+        <div id="lambChildrenContainer" style="margin-bottom:8px;">
+          <!-- dynamically generated lamb tag/name inputs will appear here -->
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+          <button id="lambingCancel" class="button-cancel">Cancel</button>
+          <button id="lambingConfirmBtn" class="button-primary">Record Lambing</button>
+        </div>
+      </div>
+    </div>
+
+    <h2>Your Animals</h2>
+    <div id="tabs" class="tabs" role="tablist" aria-label="Sheep categories">
+      <button class="tab-button active" data-tab="active-ewes" data-label="Active Ewes" role="tab">Active Ewes</button>
+      <button class="tab-button" data-tab="active-rams" data-label="Active Rams" role="tab">Active Rams</button>
+      <button class="tab-button" data-tab="current-lambs" data-label="Current Lambs" role="tab">Current Lambs (&lt;4
+        months)</button>
+      <button class="tab-button" data-tab="culled" data-label="Culled" role="tab">Culled</button>
+      <button class="tab-button" data-tab="to-be-culled" data-label="To Be Culled" role="tab">To Be Culled</button>
+      <button class="tab-button" data-tab="sold" data-label="Sold" role="tab">Sold</button>
+      <button class="tab-button" data-tab="all" data-label="All" role="tab">All</button>
+
+    </div>
+    <div id="animalListContainer">
+      <table id="sheepTable" class="animal-table">
+        <thead>
+          <tr>
+            <th class="col-select"><input type="checkbox" id="selectAllCheckbox" title="Select all visible"></th>
+            <th data-sort="name">Name / Tag</th>
+            <th class="col-sire" data-sort="sire">Sire</th>
+            <th class="col-dam" data-sort="dam">Dam</th>
+            <th class="col-sire-sire" data-sort="sireSire">Sire-Sire</th>
+            <th class="col-breed" data-sort="breed">Breed</th>
+            <th class="col-notes" data-sort="notes">Notes</th>
+            <th class="col-age" data-sort="age">Age</th>
+            <th class="col-weight" data-sort="weight">Weight</th>
+            <th class="col-sex" data-sort="sex">Sex</th>
+            <th class="col-past-lambing" data-sort="pastLambing">Past Lambing</th>
+            <th class="col-past-bred" data-sort="bredDate">Past Bred Date</th>
+            <th class="col-days-until" data-sort="daysUntil">Days Until Lambing</th>
+            <th class="col-days-post" data-sort="daysPost">Days Post-Lambing</th>
+            <th class="col-expectedDueDate" data-sort="expectedDueDate">Expected Due Date</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- rows populated by script.js -->
+        </tbody>
+      </table>
+      <p id="noSheepMessage" style="display:none;">No animals yet. Add one using "Add New Sheep".</p>
+    </div>
+
+
+    <!-- Bulk actions row beneath import controls: moved into top-controls -->
+
+    <!-- Modal for adding new sheep -->
+    <div id="sheepModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>Add New Sheep</h2>
+        <form id="sheepForm">
+          <label for="sheepName">Name / Ear Tag:</label>
+          <input type="text" id="sheepName" required>
+
+          <label for="sheepBreed">Breed:</label>
+          <input type="text" id="sheepBreed" placeholder="e.g., Katahdin">
+
+          <label for="sheepSex">Sex:</label>
+          <select id="sheepSex">
+            <option value="Unknown">Unknown</option>
+            <option value="Ewe">Ewe</option>
+            <option value="Ram">Ram</option>
+          </select>
+
+          <label for="sheepStatus">Status:</label>
+          <select id="sheepStatus">
+            <option value="active">Active</option>
+            <option value="to-be-culled">To Be Culled</option>
+            <option value="culled">Culled</option>
+            <option value="sold">Sold</option>
+            <option value="archived">Archived</option>
+          </select>
+
+          <label for="sheepAge">Age:</label>
+          <input type="text" id="sheepAge" placeholder="e.g., 2 years">
+
+          <label for="sheepWeight">Weight (lbs):</label>
+          <input type="number" id="sheepWeight" placeholder="130">
+
+          <label for="sheepBirthDate">Birth Date:</label>
+          <input type="date" id="sheepBirthDate">
+
+          <label for="sheepNotes">Notes:</label>
+          <textarea id="sheepNotes" placeholder="Healthy, lambed twice..."></textarea>
+
+          <div class="modal-buttons">
+            <button type="submit" class="button-primary">Save Sheep</button>
+            <button type="button" class="button-cancel" id="cancelBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CSV Import Preview Modal -->
+    <div id="csvPreviewModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="csvPreviewClose">&times;</span>
+        <h2>CSV Import Preview</h2>
+        <div id="csvPreviewSummary" style="margin-bottom:8px;"></div>
+        <div style="max-height:350px; overflow:auto; border:1px solid #ddd; padding:8px; background:#fff;">
+          <table id="csvPreviewTable" class="report-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Breed</th>
+                <th>Sex</th>
+                <th>Birth Date</th>
+                <th>Weight</th>
+                <th>Notes</th>
+                <th>Lambings</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+          <button id="csvCancelPreviewBtn" class="button-cancel">Cancel</button>
+          <button id="csvConfirmBtn" class="button-primary">Confirm Import</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breeding Modal -->
+    <div id="breedingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="breedingClose">&times;</span>
+        <h2 id="breedingModalTitle">Record Breeding</h2>
+        <div style="margin-bottom:8px;">
+          <label for="breedingSire"><strong>Select Sire (Ram):</strong></label>
+          <select id="breedingSire" style="width:100%; padding:8px; margin-top:6px;"></select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label for="breedingDate"><strong>Bred Date:</strong></label>
+          <input type="date" id="breedingDate" style="display:block; margin-top:6px;">
+        </div>
+        <div id="breedingTargets" style="margin-bottom:8px; color:#555;"></div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+          <button id="breedingCancel" class="button-cancel">Cancel</button>
+          <button id="breedingConfirmBtn" class="button-primary">Apply Breeding</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sale Modal -->
+    <div id="saleModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="saleModalClose">&times;</span>
+        <h2>Record Sale</h2>
+        <div style="margin-top:8px;">
+          <div style="margin-bottom:8px;">
+            <label><input type="radio" name="saleMode" value="bulk" checked> Bulk sale (one total price)</label>
+            <label style="margin-left:12px;"><input type="radio" name="saleMode" value="per"> Per-animal prices</label>
+          </div>
+          <div id="saleBulkRow" style="margin-bottom:8px;">
+            <label for="saleBulkPrice"><strong>Total sale amount:</strong></label>
+            <input id="saleBulkPrice" type="text" placeholder="e.g. 1200" style="margin-left:8px;padding:6px;" />
+          </div>
+          <div id="salePerAnimalRow" style="margin-bottom:8px; display:none;">
+            <div id="salePerAnimalContainer"
+              style="max-height:220px; overflow:auto; border:1px solid #eee; padding:6px; background:#fff;"></div>
+          </div>
+          <div style="margin-bottom:8px;color:#555;"><strong>Selected animals:</strong> <span
+              id="saleSelectedList"></span></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button id="saleCancelBtn" class="button-cancel">Cancel</button>
+          <button id="saleConfirmBtn" class="button-primary">Confirm Sale</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom import controls and duplicate report link removed (moved to top-controls) -->
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Initialize the page
+    window.addEventListener('DOMContentLoaded', initIndex);
+  </script>
+</body>
+
+</html>

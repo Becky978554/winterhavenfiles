@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>User Management — Sheep Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container" role="main" aria-labelledby="usersTitle">
+    <a href="index.html" class="back">← Back</a>
+    <h1 id="usersTitle">User Management</h1>
+    <p style="color:#666">Admin-only page: view, create, delete users, change roles and reset passwords.</p>
+
+    <div id="accessDenied" style="display:none; color:#a33; font-weight:600;">Access denied. Admins only.</div>
+
+    <div id="usersArea" style="display:none;">
+      <h2>Existing users</h2>
+      <table class="animal-table" id="usersTable">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h2 style="margin-top:16px;">Invite new user (admin only)</h2>
+      <form id="createForm" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input id="newUsername" placeholder="username" />
+        <input id="newEmail" placeholder="user email (for invite)" />
+        <select id="newRole">
+          <option value="viewer">viewer</option>
+          <option value="manager">manager</option>
+          <option value="admin">admin</option>
+        </select>
+        <button id="createBtn" class="button button-primary" type="button">Create & Invite</button>
+      </form>
+      <div style="margin-top:8px;color:#444;font-size:13px;">Note: a setup link and temporary password will be prepared
+        for the user; they must follow the link to set a new password.</div>
+      <div id="usersMsg" style="color:#a33; margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    (function () {
+      function escapeHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function showDenied() { document.getElementById('accessDenied').style.display = 'block'; document.getElementById('usersArea').style.display = 'none'; }
+      function showArea() { document.getElementById('accessDenied').style.display = 'none'; document.getElementById('usersArea').style.display = 'block'; }
+
+      // check admin
+      try {
+        const cur = window.getCurrentUser ? window.getCurrentUser() : null;
+        if (!cur || cur.role !== 'admin') { showDenied(); return; }
+        showArea();
+      } catch (e) { showDenied(); return; }
+
+      const tbody = document.querySelector('#usersTable tbody');
+      const msg = document.getElementById('usersMsg');
+
+      function loadUsers() {
+        tbody.innerHTML = '';
+        const list = (window.getAllUsers ? window.getAllUsers() : []);
+        list.forEach(u => {
+          const tr = document.createElement('tr');
+          const tdUser = document.createElement('td'); tdUser.textContent = u.username;
+          const tdEmail = document.createElement('td'); tdEmail.textContent = u.email || '';
+          const tdRole = document.createElement('td');
+          const sel = document.createElement('select'); sel.innerHTML = '<option value="viewer">viewer</option><option value="manager">manager</option><option value="admin">admin</option>'; sel.value = u.role || 'viewer';
+          const tdActions = document.createElement('td');
+          const btnSave = document.createElement('button'); btnSave.textContent = 'Save'; btnSave.className = 'button'; btnSave.type = 'button';
+          const pwdInput = document.createElement('input'); pwdInput.type = 'password'; pwdInput.placeholder = 'new password'; pwdInput.style.marginLeft = '8px';
+          const btnReset = document.createElement('button'); btnReset.textContent = 'Set PW'; btnReset.className = 'button'; btnReset.type = 'button'; btnReset.style.marginLeft = '6px';
+          const btnDelete = document.createElement('button'); btnDelete.textContent = 'Delete'; btnDelete.className = 'button button-cancel'; btnDelete.type = 'button'; btnDelete.style.marginLeft = '6px';
+
+          btnSave.addEventListener('click', async () => {
+            const r = sel.value;
+            const res = window.setUserRole ? window.setUserRole(u.username, r) : { ok: false };
+            if (res && res.ok) { msg.textContent = 'Role updated.'; loadUsers(); } else { msg.textContent = 'Failed to update role.'; }
+          });
+
+          btnReset.addEventListener('click', async () => {
+            const np = pwdInput.value || '';
+            if (!np) { msg.textContent = 'Enter a new password.'; return; }
+            const res = window.setUserPassword ? await window.setUserPassword(u.username, np) : { ok: false };
+            if (res && res.ok) { msg.textContent = 'Password updated.'; pwdInput.value = ''; } else { msg.textContent = 'Failed to update password.'; }
+          });
+
+          btnDelete.addEventListener('click', () => {
+            if (!confirm('Delete user ' + u.username + '?')) return;
+            const res = window.deleteUser ? window.deleteUser(u.username) : { ok: false };
+            if (res && res.ok) { msg.textContent = 'User deleted.'; loadUsers(); } else { msg.textContent = 'Failed to delete user.'; }
+          });
+
+          tdRole.appendChild(sel);
+          tdActions.appendChild(btnSave);
+          tdActions.appendChild(pwdInput);
+          tdActions.appendChild(btnReset);
+          tdActions.appendChild(btnDelete);
+
+          tr.appendChild(tdUser); tr.appendChild(tdEmail); tr.appendChild(tdRole); tr.appendChild(tdActions);
+          tbody.appendChild(tr);
+        });
+      }
+
+      loadUsers();
+
+      document.getElementById('createBtn').addEventListener('click', async () => {
+        msg.textContent = '';
+        const u = (document.getElementById('newUsername').value || '').trim();
+        const email = (document.getElementById('newEmail').value || '').trim();
+        const role = document.getElementById('newRole').value || 'viewer';
+        if (!u || !email) { msg.textContent = 'Username and email required.'; return; }
+        if (typeof window.adminCreateUser !== 'function') { msg.textContent = 'Create failed: no admin API'; return; }
+        try {
+          const res = await window.adminCreateUser(u, email, role);
+          if (!res || !res.ok) { msg.textContent = 'Create failed: ' + (res.reason || 'error'); return; }
+          // show invite controls: open mail client or copy link
+          const info = [];
+          try { info.push('Role: ' + (window.roleLabel ? window.roleLabel(role) : role)); } catch (e) { info.push('Role: ' + role); }
+          if (res.mailto) info.push('<a href="' + res.mailto + '">Open mail client</a>');
+          if (res.setupLink) info.push('<a href="' + res.setupLink + '" target="_blank">Open setup link</a>');
+          info.push('Temporary password: <strong>' + (res.tempPassword || '') + '</strong>');
+          msg.innerHTML = 'Invite ready: ' + info.join(' | ');
+          document.getElementById('newUsername').value = ''; document.getElementById('newEmail').value = '';
+          loadUsers();
+        } catch (e) { msg.textContent = 'Create failed.'; }
+      });
+
+    })();
+  </script>
+</body>
+
+</html>

@@ -6,6 +6,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sheep Management</title>
   <link rel="stylesheet" href="style.css" />
+  <script>
+    // Early polyfill for crypto.randomUUID to cover older browsers/contexts
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? function (arr) { return crypto.getRandomValues(arr); }
+                : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+              var arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+              return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body>
@@ -18,22 +42,16 @@
       </div>
       <div class="spacer"></div>
       <div class="right">
-        <div class="bulk-dropdown">
-          <a id="bulkDropdownToggle" class="button" href="actions.html" aria-expanded="false"
-            aria-controls="bulkDropdownMenu">Actions</a>
-          <div id="bulkDropdownMenu" class="dropdown-menu" style="display:none;">
-            <div class="dropdown-inner">
-              <!-- Dropdown simplified: actions moved to bulk toolbar -->
-            </div>
-          </div>
-        </div>
+
         <!-- Bulk toolbar removed: actions are shown as tabs under Actions button -->
         <div id="topActionShortcuts" class="top-action-shortcuts">
           <a id="addSheepBtn" class="button button-primary" role="button">+ Add New Sheep</a>
-          <a id="addLambingBtn" class="button" role="button">+ Lambing</a>
+          <a id="addLambingBtn" class="button" role="button">+ Record Lambing</a>
+          <a class="button" href="actions.html">Your Animals</a>
           <a class="button" href="finance.html">Finances</a>
           <a class="button" href="settings.html">Settings</a>
           <a class="button" href="reports.html">Write Reports</a>
+          <a class="button" href="users.html" data-role="admin">User Management</a>
         </div>
       </div>
     </div>
@@ -82,46 +100,27 @@
       </div>
     </div>
 
-    <h2>Your Animals</h2>
-    <div id="tabs" class="tabs" role="tablist" aria-label="Sheep categories">
-      <button class="tab-button active" data-tab="active-ewes" data-label="Active Ewes" role="tab">Active Ewes</button>
-      <button class="tab-button" data-tab="active-rams" data-label="Active Rams" role="tab">Active Rams</button>
-      <button class="tab-button" data-tab="current-lambs" data-label="Current Lambs" role="tab">Current Lambs (&lt;4
-        months)</button>
-      <button class="tab-button" data-tab="culled" data-label="Culled" role="tab">Culled</button>
-      <button class="tab-button" data-tab="to-be-culled" data-label="To Be Culled" role="tab">To Be Culled</button>
-      <button class="tab-button" data-tab="sold" data-label="Sold" role="tab">Sold</button>
-      <button class="tab-button" data-tab="all" data-label="All" role="tab">All</button>
+    <!-- Breeding summary: counts and near-due list -->
+    <div id="breedingSummary"
+      style="margin:12px 0;padding:12px;background:#fff;border:1px solid #eee;border-radius:6px;">
+      <!-- populated by script.js -->
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+        <label for="breedingTimeWindowSelect" style="font-weight:600;">Time window:</label>
+        <select id="breedingTimeWindowSelect" style="padding:6px;">
+          <option value="thisYear">This year</option>
+          <option value="last12">Last 12 months</option>
+          <option value="custom">Custom range</option>
+        </select>
+        <div id="breedingCustomRange" style="display:none;align-items:center;gap:8px;">
+          <label style="font-size:13px;color:#444;">From</label>
+          <input type="date" id="breedingCustomStart" style="padding:6px;" />
+          <label style="font-size:13px;color:#444;">To</label>
+          <input type="date" id="breedingCustomEnd" style="padding:6px;" />
+        </div>
+      </div>
+    </div>
 
-    </div>
-    <div id="animalListContainer">
-      <table id="sheepTable" class="animal-table">
-        <thead>
-          <tr>
-            <th class="col-select"><input type="checkbox" id="selectAllCheckbox" title="Select all visible"></th>
-            <th data-sort="name">Name / Tag</th>
-            <th class="col-sire" data-sort="sire">Sire</th>
-            <th class="col-dam" data-sort="dam">Dam</th>
-            <th class="col-sire-sire" data-sort="sireSire">Sire-Sire</th>
-            <th class="col-breed" data-sort="breed">Breed</th>
-            <th class="col-notes" data-sort="notes">Notes</th>
-            <th class="col-age" data-sort="age">Age</th>
-            <th class="col-weight" data-sort="weight">Weight</th>
-            <th class="col-sex" data-sort="sex">Sex</th>
-            <th class="col-past-lambing" data-sort="pastLambing">Past Lambing</th>
-            <th class="col-past-bred" data-sort="bredDate">Past Bred Date</th>
-            <th class="col-days-until" data-sort="daysUntil">Days Until Lambing</th>
-            <th class="col-days-post" data-sort="daysPost">Days Post-Lambing</th>
-            <th class="col-expectedDueDate" data-sort="expectedDueDate">Expected Due Date</th>
-            <th class="col-actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- rows populated by script.js -->
-        </tbody>
-      </table>
-      <p id="noSheepMessage" style="display:none;">No animals yet. Add one using "Add New Sheep".</p>
-    </div>
+    <!-- Your Animals table and tabs removed from dashboard — moved to animals.html -->
 
 
     <!-- Bulk actions row beneath import controls: moved into top-controls -->
@@ -137,6 +136,31 @@
 
           <label for="sheepBreed">Breed:</label>
           <input type="text" id="sheepBreed" placeholder="e.g., Katahdin">
+
+          <label for="sheepColor">Colour:</label>
+          <select id="sheepColor">
+            <option value="">Unknown</option>
+            <option>Black with Brown and White</option>
+            <option>Chocolate Brown</option>
+            <option>Light Brown</option>
+            <option>Med Brown</option>
+            <option>Red</option>
+            <option>Red and White</option>
+            <option>White</option>
+            <option>White Speckled Black</option>
+            <option>White Speckled Brown</option>
+            <option>Other DNAs</option>
+            <option>Black</option>
+            <option>Black and White</option>
+            <option>Brown and White</option>
+            <option>Brown Speckled White</option>
+            <option>Tan</option>
+            <option>White Darkening</option>
+            <option>White Speckled Red</option>
+            <option value="__other__">Other — enter...</option>
+          </select>
+          <input type="text" id="sheepColorOther" placeholder="Enter custom colour"
+            style="display:none;margin-top:6px;">
 
           <label for="sheepSex">Sex:</label>
           <select id="sheepSex">
@@ -188,8 +212,11 @@
                 <th>ID</th>
                 <th>Name</th>
                 <th>Breed</th>
+                <th>Colour</th>
                 <th>Sex</th>
                 <th>Birth Date</th>
+                <th>Breeding Date</th>
+                <th>Expected Due</th>
                 <th>Weight</th>
                 <th>Notes</th>
                 <th>Lambings</th>
@@ -258,10 +285,6 @@
   </div>
 
   <script src="script.js"></script>
-  <script>
-    // Initialize the page
-    window.addEventListener('DOMContentLoaded', initIndex);
-  </script>
 </body>
 
 </html>

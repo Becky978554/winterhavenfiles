@@ -6,23 +6,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sheep Reports</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? function (arr) { return crypto.getRandomValues(arr); }
+                : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+              var arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+              return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body class="reports-page">
-  <div class="container">
+  <div class="container" role="main" aria-labelledby="reportsTitle">
     <a href="index.html" class="back">← Back</a>
-    <h1>Reports</h1>
+    <h1 id="reportsTitle">Reports</h1>
 
-    <div id="reportImportControls" class="import-controls"
-      style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-      <label for="csvFile"><strong>Import from CSV:</strong></label>
-      <input type="file" id="csvFile" accept="text/csv">
-      <label style="margin-left:8px;"><input type="checkbox" id="csvOverwrite"> Overwrite matching IDs</label>
-      <button id="importCsvBtn" class="button">Import</button>
-      <button id="downloadTemplate" class="button" type="button">Download CSV Template</button>
-      <button id="downloadTemplateWithData" class="button" type="button">Download CSV Template (with current
-        animals)</button>
-    </div>
+    <!-- Import controls moved to Import page (import.html) to avoid duplication -->
 
     <section id="reportControls">
       <label for="reportType"><strong>Report:</strong></label>
@@ -47,7 +61,9 @@
       </select>
       <button id="exportCsv">Export CSV</button>
       <button id="exportIcs">Export ICS</button>
+      <a id="importSheepBtn" class="button" href="import.html">Import Sheep</a>
       <button id="printReport" class="button">Print</button>
+      <a class="button" href="users.html" data-role="admin">User Management</a>
     </section>
     <section id="reportFilters" class="filterform" style="margin-top:12px;">
       <div class="choosenewfilter pure-g">
@@ -77,7 +93,9 @@
 
     <h2>Notes / Daily Reports</h2>
     <textarea id="reportText" placeholder="Write your farm report here..."></textarea>
-    <button onclick="saveReport()">Save Report</button>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+      <button onclick="saveReport()">Save Report</button>
+    </div>
 
     <h2>Saved Reports</h2>
     <ul id="reportList"></ul>
@@ -118,6 +136,102 @@
         if (printBtn) printBtn.addEventListener('click', () => { window.print(); });
       } catch (e) { }
     })();
+    // If a focus was set by a tile click, pre-select a matching report
+    (function applyTileFocus() {
+      try {
+        const raw = localStorage.getItem('reportFocus');
+        if (!raw) return;
+        let focus = null;
+        try { focus = JSON.parse(raw); } catch (e) { focus = { key: raw, label: raw }; }
+        // mapping from tile keys to reportType values
+        const map = {
+          'chart-lambs-per-year': 'lambReport',
+          'chart-conception': 'breedingHistory',
+          'chart-twinning': 'lambReport',
+          'chart-avg-bw': 'lambReport',
+          'ewes-recorded-pregnant': 'dueDates',
+          'total-active-ewes': 'herdReport'
+        };
+        const sel = document.getElementById('reportType');
+        if (!sel) { localStorage.removeItem('reportFocus'); return; }
+        const k = (focus && focus.key) ? String(focus.key) : null;
+        let pick = null;
+        if (k && map[k]) pick = map[k];
+        if (!pick && k) {
+          // heuristics
+          if (k.indexOf('lamb') !== -1) pick = 'lambReport';
+          else if (k.indexOf('preg') !== -1 || k.indexOf('bred') !== -1 || k.indexOf('due') !== -1) pick = 'dueDates';
+          else if (k.indexOf('ewe') !== -1) pick = 'eweReport';
+          else if (k.indexOf('ram') !== -1) pick = 'ramReport';
+          else pick = 'herdReport';
+        }
+        if (pick) {
+          try { sel.value = pick; } catch (e) { }
+          // scroll to report controls and focus the generate button
+          try { document.getElementById('reportControls').scrollIntoView({ behavior: 'smooth' }); } catch (e) { }
+        }
+        // remove the focus key after applying
+        localStorage.removeItem('reportFocus');
+      } catch (e) { /* non-fatal */ }
+    })();
+  </script>
+  <script>
+    // After the main reports wiring, initialize reports and apply any tile focus
+    window.addEventListener('DOMContentLoaded', () => {
+      try { if (typeof initReports === 'function') initReports(); } catch (e) { }
+      try {
+        const raw = localStorage.getItem('reportFocus');
+        if (!raw) return;
+        let focus = null;
+        try { focus = JSON.parse(raw); } catch (e) { focus = { key: raw, label: raw }; }
+
+        // Insert a small banner showing which tile triggered navigation
+        try {
+          const banner = document.createElement('div');
+          banner.id = 'tileBanner';
+          banner.className = 'tile-banner';
+          banner.textContent = 'Showing report for: ' + (focus.label || focus.key || '');
+          const container = document.querySelector('.container');
+          if (container) container.insertBefore(banner, container.querySelector('#reportImportControls'));
+        } catch (e) { }
+
+        // Mapping from tile keys to reportType values (can be extended)
+        const map = {
+          'chart-lambs-per-year': 'lambReport',
+          'chart-conception': 'breedingHistory',
+          'chart-twinning': 'lambReport',
+          'chart-avg-bw': 'lambReport',
+          'ewes-recorded-pregnant': 'dueDates',
+          'total-active-ewes': 'herdReport'
+        };
+
+        const sel = document.getElementById('reportType');
+        if (sel) {
+          const k = (focus && focus.key) ? String(focus.key) : null;
+          let pick = null;
+          if (k && map[k]) pick = map[k];
+          if (!pick && k) {
+            if (k.indexOf('lamb') !== -1) pick = 'lambReport';
+            else if (k.indexOf('preg') !== -1 || k.indexOf('bred') !== -1 || k.indexOf('due') !== -1) pick = 'dueDates';
+            else if (k.indexOf('ewe') !== -1) pick = 'eweReport';
+            else if (k.indexOf('ram') !== -1) pick = 'ramReport';
+            else pick = 'herdReport';
+          }
+          if (pick) {
+            try { sel.value = pick; } catch (e) { }
+          }
+        }
+
+        // Trigger generation after a short delay so handlers are wired
+        setTimeout(() => {
+          try {
+            const gen = document.getElementById('generateReport') || document.getElementById('generateReport2');
+            if (gen) gen.click();
+          } catch (e) { }
+          try { localStorage.removeItem('reportFocus'); } catch (e) { }
+        }, 120);
+      } catch (e) { /* non-fatal */ }
+    });
   </script>
 </body>
 

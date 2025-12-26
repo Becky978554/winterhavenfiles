@@ -6,6 +6,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sheep Details</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? function (arr) { return crypto.getRandomValues(arr); }
+                : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+              var arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+              return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body>
@@ -48,6 +71,7 @@
           <option value="Ram">Ram</option>
         </select>
       </p>
+      <p id="colorDisplay"><strong>Colour:</strong> <span id="color">N/A</span></p>
       <p><strong>Status:</strong>
         <select id="status">
           <option value="active">Active</option>

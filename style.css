@@ -4,6 +4,91 @@
   outline: 2px solid var(--focus-outline);
 }
 
+/* Collapsible widget styles: top-right toggle with fade+slide (300ms) */
+.wm-collapsible {
+  position: relative;
+}
+
+.wm-collapsible > .widget-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 6px;
+  border: 1px solid var(--border, #ddd);
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.06);
+  transition: opacity 160ms ease, transform 200ms ease;
+}
+
+.wm-collapsible > .widget-toggle:hover {
+  transform: translateY(-2px);
+}
+
+/* When collapsed: hide everything except the first child (presumed header) and the toggle */
+.wm-collapsible.wm-collapsed > *:not(.widget-toggle):not(:first-child) {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0 !important;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 300ms ease, transform 300ms ease, max-height 300ms ease;
+}
+
+.wm-collapsible > *:not(.widget-toggle):not(:first-child) {
+  opacity: 1;
+  transform: none;
+  transition: opacity 300ms ease, transform 300ms ease, max-height 300ms ease;
+}
+
+.wm-collapsible .widget-toggle:focus {
+  outline: 2px solid var(--focus-outline);
+}
+
+/* Default theme variables — add sensible fallbacks so the UI shows colors */
+:root {
+  --color-primary: #2563eb;
+  --color-primary-600: #1e40af;
+  --color-primary-contrast: #ffffff;
+  --button-bg: var(--color-primary);
+  --button-bg-hover: var(--color-primary-600);
+  --button-text: var(--color-primary-contrast);
+
+  --surface: #f6f8fb;
+  --surface-2: #eef4fb;
+  --page-bg: #f2f6fb;
+  /* Global text size (can be adjusted from Settings) */
+  --text-size: 15px;
+
+  --border: #e6e6e6;
+  --table-border: #e9eff5;
+  --table-zebra-bg: #fbfbfd;
+  --row-hover: #f1f8ff;
+  --focus-outline: rgba(37, 99, 235, 0.24);
+  --muted: #666666;
+
+  --color-success: #ecfdf5;
+  --color-danger: #fee2e2;
+}
+
+/* Utility for screen-reader-only labels */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
 a.button,
 .animal-list li {
   margin-bottom: 10px;
@@ -60,6 +145,11 @@ a.button:hover {
 /* Page background for the whole document (fallback to page container) */
 body {
   background: var(--page-bg, var(--surface));
+}
+
+/* Apply global text size from variable so Settings can change it */
+html {
+  font-size: var(--text-size, 15px);
 }
 
 button:hover {
@@ -373,6 +463,599 @@ a.button:hover,
   margin-top: 12px;
   overflow-x: auto;
   white-space: nowrap;
+}
+
+/* Polished Actions page styles */
+.top-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+#topActionBar {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--table-border);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+}
+
+.actions-table-container {
+  margin-top: 12px;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--table-border);
+}
+
+.actions-table-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.actions-controls-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.actions-search {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  width: 220px;
+}
+
+.row-action.button {
+  padding: 6px 10px;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid var(--border);
+  color: #222;
+}
+
+.row-action.button:hover {
+  background: var(--surface-2);
+}
+
+.animal-table th {
+  background: linear-gradient(180deg, #fbfdff, #f1f7ff);
+  color: #0f172a;
+}
+
+.animal-table td {
+  vertical-align: middle;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #eef6ff;
+  color: var(--button-bg);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.col-checkbox-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  background: #fff;
+  margin-bottom: 6px;
+}
+
+.checkbox-badge {
+  flex: 0 0 auto;
+}
+
+.badge-on {
+  background: #ecfdf5;
+  color: #166534;
+  border-color: #b7f0d2;
+}
+
+.badge-off {
+  background: #fff7ed;
+  color: #92400e;
+  border-color: #fee7c0;
+}
+
+.saved-indicator {
+  position: absolute;
+  right: 28px;
+  top: 18px;
+  background: rgba(37, 99, 235, 0.06);
+  color: #1e40af;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  border: 1px solid rgba(30, 64, 175, 0.06);
+}
+
+.badge-nursing {
+  background: #fff7ed;
+  color: #92400e;
+  border-color: #fee7c0;
+}
+
+.badge-bred {
+  background: #ecfdf5;
+  color: #166534;
+  border-color: #b7f0d2;
+}
+
+.table-actions-cell {
+  text-align: right;
+}
+
+/* Improve responsiveness for small screens */
+@media (max-width: 720px) {
+  .actions-table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions-search {
+    width: 100%;
+  }
+}
+
+/* Breeding summary widget styles */
+.breeding-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.breeding-stats {
+  flex: 1 1 480px;
+}
+
+.breeding-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.breeding-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.breeding-card {
+  padding: 10px;
+  background: #fbfdff;
+  border: 1px solid #eef2f7;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.breeding-card[draggable="true"] {
+  cursor: grab;
+}
+
+.draggable-panel {
+  cursor: grab;
+}
+
+.breeding-card-label {
+  font-size: 13px;
+  color: #333;
+}
+
+.breeding-card-value {
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: 6px;
+}
+
+.breeding-card-small {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.breeding-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chart-card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.chart-card.wide {
+  /* Chart cards in the combined grid should remain visually larger */
+  grid-column: span 2;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.chart-value {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.chart-spark {
+  height: 28px;
+}
+
+.chart-small {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Producer list rows in breeding summary */
+.producer-row {
+  font-size: 13px;
+  padding: 4px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.producer-row strong {
+  font-weight: 600;
+  color: #111;
+}
+
+/* producer-list as an unordered list to match other summary lists */
+.producer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.producer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.producer-list .producer-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.producer-list .producer-row:last-child {
+  border-bottom: none;
+}
+
+/* Hide the small counter in the top producers tile (removed per UX request) */
+#topProducersCard .producer-counter {
+  display: none !important;
+}
+
+.producer-counter {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.producer-list li {
+  padding: 4px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.producer-counter {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.chart-visual {
+  overflow: auto;
+}
+
+/* Strong visibility overrides for top producers list — ensure never hidden */
+#topProducersCard .producer-list,
+#topProducersCard .producer-list .producer-row,
+#topProducersCard .producer-list .producer-row span {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #111 !important;
+}
+
+#topProducersCard .producer-list {
+  padding: 4px 0 !important;
+  margin: 6px 0 0 0 !important;
+}
+
+#topProducersCard .producer-list .producer-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  padding: 6px 8px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+#topProducersCard .producer-list .producer-row:last-child {
+  border-bottom: none !important;
+}
+
+
+/* Controls and legend for breeding widget */
+.breeding-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.breeding-controls .button {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.breeding-legend {
+  font-size: 12px;
+  color: #444;
+  margin-left: 6px;
+}
+
+.breeding-legend .muted {
+  color: #666;
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+/* Finance widget - prettier form styles for feed assumptions and manual entry */
+.finance-widget {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #111;
+}
+
+.finance-widget .finance-inner {
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+}
+
+.finance-widget .finance-inner input,
+.finance-widget .finance-inner select {
+  padding: 8px 10px;
+  border: 1px solid var(--border, #e6e6e6);
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.finance-widget .finance-inner input[type="number"] {
+  max-width: 160px;
+}
+
+.finance-widget .finance-inner input[type="date"] {
+  max-width: 150px;
+}
+
+.finance-widget .finance-inner input::placeholder {
+  color: #999;
+}
+
+.finance-widget .finance-inner label,
+.finance-widget .finance-inner .chart-title {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.finance-widget .finance-inner .muted {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.finance-widget .fi-card {
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.finance-widget form#fi_addEntryForm {
+  align-items: center;
+}
+
+.finance-widget form#fi_addEntryForm input,
+.finance-widget form#fi_addEntryForm select {
+  margin-right: 6px;
+}
+
+.finance-widget .feed-assumptions {
+  background: #fbfdff;
+  padding: 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+}
+
+.finance-widget .feed-assumptions label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.finance-widget .feed-assumptions .row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+
+/* Mini lambs-per-year thumbnail under Pregnant bar */
+.lambs-mini-link {
+  display: inline-block;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.lambs-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-card.under-pregnant {
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.chart-card.under-pregnant svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.lambs-mini svg {
+  display: block;
+}
+
+.lambs-mini-label {
+  font-size: 12px;
+  color: #333;
+}
+
+/* Banner shown on reports when navigated from a dashboard tile */
+.tile-banner {
+  background: #fff7ed;
+  border-left: 4px solid #f59e0b;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+/* Make Lambs-per-year card visually taller (double the small chart height) */
+#lambsPerYearCard .chart-visual svg {
+  height: 192px !important;
+  max-width: 100%;
+  display: block;
+}
+
+#lambsPerYearCard {
+  /* ensure card has enough internal spacing for a taller chart */
+  padding-bottom: 6px;
+}
+
+/* Make Lambs-per-year text sizes match Pregnant label and sex-ratio breakdown */
+#lambsPerYearCard .chart-title {
+  font-size: 13px;
+  /* match other small headings */
+  font-weight: 600;
+}
+
+#lambsPerYearCard .chart-value {
+  font-size: 14px;
+  /* align numeric size with Pregnant percent */
+  font-weight: 700;
+}
+
+#lambsPerYearCard .chart-small {
+  font-size: 12px;
+  /* same as lamb sex ratio breakdown */
+}
+
+/* removed herd sex bar (was replaced by lamb sex ratio percentages) */
+
+.breeding-progress-wrap {
+  margin-top: 10px;
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.breeding-progress-bar {
+  height: 100%;
+  background: #60a5fa;
+  transition: width 420ms ease-in-out;
+}
+
+.breeding-close-box {
+  min-width: 260px;
+  max-width: 360px;
+}
+
+.breeding-close-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.breeding-close-list {
+  margin: 0;
+  padding-left: 16px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.breeding-sex-wrap {
+  margin-top: 12px;
+}
+
+.breeding-sex-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.breeding-sex-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+/* Space the pregnant progress label and bar away from the sex ratio */
+.breeding-progress-label {
+  font-weight: 600;
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+.sex-seg {
+  height: 100%;
+}
+
+.sex-seg.male {
+  background: #ef4444;
+}
+
+.sex-seg.female {
+  background: #06b6d4;
+}
+
+@media (max-width: 760px) {
+  .breeding-wrapper {
+    flex-direction: column;
+  }
+
+  .breeding-close-box {
+    max-width: 100%;
+    min-width: auto;
+  }
 }
 
 .actions-table-container {
@@ -817,6 +1500,14 @@ a.button:hover,
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
 }
 
+.pedigree-color {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
 .pedigree-box a {
   color: #0b66c3;
   text-decoration: none;
@@ -998,5 +1689,61 @@ svg.pedigree-connectors {
   /* page margins */
   @page {
     margin: 12mm;
+  }
+}
+
+/* When the Lambs-per-year card is moved under the Pregnant % bar */
+.chart-card.under-pregnant {
+  width: 100%;
+  margin: 8px 0 0 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+  #breedingClosePanel .chart-card.under-pregnant {
+    width: 100%;
+  }
+}
+
+/* Financial widget styles for Breeding summary */
+.finance-widget {
+  margin-top: 12px;
+}
+
+.finance-inner {
+  box-sizing: border-box;
+}
+
+.fi-card {
+  background: #fbfdff;
+  border: 1px solid #eef2f7;
+  padding: 12px 14px;
+  border-radius: 6px;
+  min-width: 200px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.fi-amount {
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.fi-amount.negative {
+  color: #dc2626;
+}
+
+.fi-amount.positive {
+  color: #16a34a;
+}
+
+/* small responsive tweaks */
+@media (max-width:760px) {
+  .fi-card {
+    min-width: 48%;
+  }
+
+  .finance-inner {
+    padding: 10px;
   }
 }

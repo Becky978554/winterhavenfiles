@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login — Sheep Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container" role="main" aria-labelledby="loginTitle">
+    <h1 id="loginTitle">Sign In</h1>
+    <p style="color:#666">Sign in with your account. Account creation is by administrator only.</p>
+    <form id="loginForm" style="display:flex; flex-direction:column; gap:8px; max-width:420px;">
+      <label for="username">Username</label>
+      <input id="username" name="username" aria-label="Username" />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" aria-label="Password" />
+
+      <div id="registerFields" style="display:none; flex-direction:column; gap:8px;">
+        <div style="color:#666">Account creation is disabled here. Ask your administrator to create an account for you.
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button type="submit" class="button button-primary" id="submitBtn">Sign In</button>
+        <button type="button" class="button" id="toggleRegister">Create account</button>
+        <a href="index.html" class="button">Cancel</a>
+      </div>
+    </form>
+    <div id="loginMsg" aria-live="polite" style="color:#a33; margin-top:8px;"></div>
+  </div>
+  <script>
+    (function () {
+      let registering = false;
+      const form = document.getElementById('loginForm');
+      const toggle = document.getElementById('toggleRegister');
+      const regFields = document.getElementById('registerFields');
+      const msg = document.getElementById('loginMsg');
+
+      toggle.addEventListener('click', function () {
+        registering = !registering;
+        regFields.style.display = registering ? 'flex' : 'none';
+        document.getElementById('submitBtn').textContent = registering ? 'Create account' : 'Sign In';
+        toggle.textContent = registering ? 'Have an account? Sign in' : 'Create account';
+        msg.textContent = '';
+      });
+
+      form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        msg.textContent = '';
+        const u = (document.getElementById('username').value || '').trim();
+        const p = (document.getElementById('password').value || '');
+        const roleEl = document.getElementById('role');
+        const role = roleEl ? (roleEl.value || 'viewer') : 'viewer';
+        if (!u) { msg.textContent = 'Enter a username.'; return; }
+        if (!p) { msg.textContent = 'Enter a password.'; return; }
+
+        if (registering) {
+          msg.textContent = 'Account creation is disabled here. Ask your administrator to create an account for you.'; return;
+        }
+
+        // signin flow
+        try {
+          const res = await (window.authenticateUser ? window.authenticateUser(u, p) : Promise.resolve({ ok: true, user: { username: u, role: role } }));
+          if (!res || !res.ok) {
+            if (res && res.reason === 'not_found') msg.textContent = 'User not found.'; else if (res && res.reason === 'invalid') msg.textContent = 'Invalid password.'; else msg.textContent = 'Sign in failed.';
+            return;
+          }
+          const user = res.user || { username: u, role: role };
+          try {
+            if (typeof setCurrentUser === 'function') {
+              try { setCurrentUser(user); } catch (e) { localStorage.setItem('currentUser', JSON.stringify(user)); }
+              try { if (typeof applyRoleVisibility === 'function') applyRoleVisibility(); } catch (e) { }
+            } else {
+              localStorage.setItem('currentUser', JSON.stringify(user));
+            }
+          } catch (e) { try { localStorage.setItem('currentUser', JSON.stringify(user)); } catch (e2) { } }
+          try { const rl = (window.roleLabel ? window.roleLabel(user.role) : user.role); alert('Signed in as ' + user.username + ' (' + rl + ')'); } catch (e) { alert('Signed in as ' + user.username + ' (' + user.role + ')'); }
+          try {
+            const redirect = localStorage.getItem('postLoginRedirect');
+            if (redirect) { localStorage.removeItem('postLoginRedirect'); location.href = redirect; }
+            else { location.href = 'index.html'; }
+          } catch (e) { location.href = 'index.html'; }
+        } catch (e) { msg.textContent = 'Sign in failed.'; }
+      });
+    })();
+  </script>
+</body>
+
+</html>

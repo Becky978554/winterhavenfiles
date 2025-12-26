@@ -6,6 +6,29 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Settings — Sheep Management</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? function (arr) { return crypto.getRandomValues(arr); }
+                : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+              var arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+              return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body>
@@ -54,6 +77,9 @@
       </select>
       <div style="display:flex; flex-direction:column; gap:8px; max-width:520px;">
         <label><input type="checkbox" id="colBreed"> Show Breed</label>
+
+        <label><input type="checkbox" id="colColor"> Show Colour</label>
+
         <label><input type="checkbox" id="colSire"> Show Sire</label>
         <label><input type="checkbox" id="colDam"> Show Dam</label>
         <label><input type="checkbox" id="colSireSire"> Show Sire-Sire (grandfather)</label>
@@ -61,11 +87,18 @@
         <label><input type="checkbox" id="colAge"> Show Age</label>
         <label><input type="checkbox" id="colWeight"> Show Weight</label>
         <label><input type="checkbox" id="colSex"> Show Sex</label>
+        <label><input type="checkbox" id="colStatus"> Show Status</label>
         <label><input type="checkbox" id="colPastLambing"> Show Past Lambing (Single / Twin / Triplet / Other)</label>
         <label><input type="checkbox" id="colPastBred"> Show Past Bred Date</label>
         <label><input type="checkbox" id="colDaysUntil"> Show Days Until Lambing</label>
         <label><input type="checkbox" id="colDaysPost"> Show Days Post-Lambing</label>
         <label><input type="checkbox" id="colExpectedDue"> Show Expected Due Date</label>
+      </div>
+      <div id="lambAgeContainer" style="margin-top:10px; display:none; max-width:520px;">
+        <label for="lambAgeMonths"><strong>Lamb threshold (months):</strong></label>
+        <input type="number" id="lambAgeMonths" min="0" style="width:120px; margin-left:8px;" />
+        <p style="color:#666; font-size:0.9rem; margin-top:6px;">Only used by the "Current Lambs" tab to determine
+          how old a lamb may be to appear there. Default is 8 months.</p>
       </div>
       <div style="margin-top:12px;">
         <button id="saveColumns" class="button-primary">Save Columns</button>
@@ -79,6 +112,21 @@
     <div style="margin-bottom:8px;">
       <button id="runDiagnostics" class="button">Run Diagnostics</button>
       <div id="diagResults" style="margin-top:8px; white-space:pre-wrap; font-family:monospace; color:#222;"></div>
+    </div>
+    <hr style="margin:16px 0;">
+    <h2>Invite new user (admin only)</h2>
+    <div id="inviteArea" style="margin-bottom:12px; display:none;">
+      <form id="inviteForm" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input id="inviteUsername" placeholder="username" />
+        <input id="inviteEmail" placeholder="user email (for invite)" />
+        <select id="inviteRole">
+          <option value="viewer">viewer</option>
+          <option value="manager">manager</option>
+          <option value="admin">admin</option>
+        </select>
+        <button id="inviteBtn" class="button button-primary" type="button">Create & Invite</button>
+      </form>
+      <div id="inviteMsg" style="margin-top:8px;color:#a33;font-size:13px;"></div>
     </div>
     <hr style="margin:16px 0;">
     <hr style="margin:16px 0;">
@@ -163,6 +211,15 @@
             <option value="1.5">150%</option>
           </select>
         </div>
+        <div style="min-width:180px;">
+          <label><strong>Text size</strong></label>
+          <select id="appearance_textSize" style="width:100%; margin-top:6px;">
+            <option value="13px">Small</option>
+            <option value="15px" selected>Normal</option>
+            <option value="17px">Large</option>
+            <option value="19px">Extra Large</option>
+          </select>
+        </div>
       </div>
       <div style="margin-top:8px;">
         <button id="applyAppearanceBtn" class="button">Apply Appearance</button>
@@ -179,46 +236,102 @@
       const input = document.getElementById('gestationDays');
       const pedigreeSel = document.getElementById('pedigreeGenerations');
       function load() {
-        const raw = localStorage.getItem('gestationDays');
-        const v = parseInt(raw, 10);
-        input.value = (isNaN(v) || v <= 0) ? 147 : v;
-
-        // load nursing window (days) setting
+        // Load gestationDays only if previously saved; do not apply a hard default
         try {
-          const nw = parseInt(localStorage.getItem('nursingWindowDays'), 10);
-          document.getElementById('nursingWindowDays').value = (isNaN(nw) || nw < 0) ? 90 : nw;
-        } catch (e) { document.getElementById('nursingWindowDays').value = 90; }
+          const raw = localStorage.getItem('gestationDays');
+          if (raw !== null) {
+            const v = parseInt(raw, 10);
+            if (!isNaN(v) && v > 0) input.value = v;
+          }
+        } catch (e) { }
 
-        // load pedigree generations setting (default to 3)
+        // load nursing window (days) only if saved
         try {
-          const pg = parseInt(localStorage.getItem('pedigreeGenerations'), 10);
-          pedigreeSel.value = (isNaN(pg) || pg < 1) ? '3' : String(pg);
-        } catch (e) { pedigreeSel.value = '3'; }
+          const nwRaw = localStorage.getItem('nursingWindowDays');
+          if (nwRaw !== null) {
+            const nw = parseInt(nwRaw, 10);
+            if (!isNaN(nw) && nw >= 0) document.getElementById('nursingWindowDays').value = nw;
+          }
+        } catch (e) { }
+
+        // load pedigree generations setting only if saved
+        try {
+          const pgRaw = localStorage.getItem('pedigreeGenerations');
+          if (pgRaw !== null) {
+            const pg = parseInt(pgRaw, 10);
+            if (!isNaN(pg) && pg >= 1) pedigreeSel.value = String(pg);
+          }
+        } catch (e) { }
 
         // load dashboard column settings (support per-tab settings)
         try {
-          const colsRaw = localStorage.getItem('dashboardColumns');
-          let parsed = colsRaw ? JSON.parse(colsRaw) : null;
-          // If legacy single-map format, treat as global
-          if (parsed && Object.keys(parsed).length && Object.keys(parsed).every(k => typeof parsed[k] === 'boolean')) {
-            parsed = { global: parsed };
+          const colsRaw = localStorage.getItem('actionsColumns');
+          if (colsRaw) {
+            let parsed = null;
+            try { parsed = JSON.parse(colsRaw); } catch (e) { parsed = null; }
+            // If legacy single-map format, treat as global
+            if (parsed && Object.keys(parsed).length && Object.keys(parsed).every(k => typeof parsed[k] === 'boolean')) {
+              parsed = { global: parsed };
+            }
+            // only populate checkboxes if we have parsed settings
+            if (parsed) {
+              const selectedTab = document.getElementById('columnsTabSelect').value || 'global';
+              const map = (parsed && parsed[selectedTab]) ? parsed[selectedTab] : (parsed && parsed.global ? parsed.global : null);
+              if (map) {
+                document.getElementById('colBreed').checked = !!(map.breed);
+                document.getElementById('colColor').checked = !!(map.color);
+                document.getElementById('colSire').checked = !!(map.sire);
+                document.getElementById('colDam').checked = !!(map.dam);
+                document.getElementById('colSireSire').checked = !!(map.sireSire);
+                document.getElementById('colNotes').checked = !!(map.notes);
+                document.getElementById('colAge').checked = !!(map.age);
+                document.getElementById('colWeight').checked = !!(map.weight);
+                document.getElementById('colSex').checked = !!(map.sex);
+                document.getElementById('colPastLambing').checked = !!(map.pastLambing);
+                document.getElementById('colPastBred').checked = !!(map.bredDate);
+                document.getElementById('colDaysUntil').checked = !!(map.daysUntil);
+                document.getElementById('colDaysPost').checked = !!(map.daysPost);
+                document.getElementById('colExpectedDue').checked = !!(map.expectedDueDate);
+                // show/hide lamb age control for Current Lambs tab
+                try {
+                  const sel = document.getElementById('columnsTabSelect').value || 'global';
+                  const container = document.getElementById('lambAgeContainer');
+                  if (container) {
+                    if (sel === 'current-lambs') {
+                      container.style.display = 'block';
+                      if (typeof map.lambAgeMonths !== 'undefined') {
+                        const months = parseInt(map.lambAgeMonths, 10);
+                        if (!isNaN(months)) document.getElementById('lambAgeMonths').value = months;
+                      } else {
+                        // if no per-tab value, try legacy global value
+                        const legacy = localStorage.getItem('lambAgeMonths');
+                        if (legacy !== null) {
+                          const lm = parseInt(legacy, 10);
+                          if (!isNaN(lm)) document.getElementById('lambAgeMonths').value = lm;
+                        }
+                      }
+                    } else {
+                      container.style.display = 'none';
+                    }
+                  }
+                } catch (e) { }
+              }
+            }
           }
-          // default to global if no per-tab found
-          const selectedTab = document.getElementById('columnsTabSelect').value || 'global';
-          const map = (parsed && parsed[selectedTab]) ? parsed[selectedTab] : (parsed && parsed.global ? parsed.global : null);
-          document.getElementById('colBreed').checked = !(map && map.breed === false);
-          document.getElementById('colSire').checked = !(map && map.sire === false);
-          document.getElementById('colDam').checked = !(map && map.dam === false);
-          document.getElementById('colSireSire').checked = !(map && map.sireSire === false);
-          document.getElementById('colNotes').checked = !(map && map.notes === false);
-          document.getElementById('colAge').checked = !(map && map.age === false);
-          document.getElementById('colWeight').checked = !(map && map.weight === false);
-          document.getElementById('colSex').checked = !(map && map.sex === false);
-          document.getElementById('colPastLambing').checked = !(map && map.pastLambing === false);
-          document.getElementById('colPastBred').checked = !(map && map.bredDate === false);
-          document.getElementById('colDaysUntil').checked = !(map && map.daysUntil === false);
-          document.getElementById('colDaysPost').checked = !(map && map.daysPost === false);
-          document.getElementById('colExpectedDue').checked = !(map && map.expectedDueDate === false);
+          // show/hide lamb age control for Current Lambs tab
+          try {
+            const sel = document.getElementById('columnsTabSelect').value || 'global';
+            const container = document.getElementById('lambAgeContainer');
+            if (container) {
+              if (sel === 'current-lambs') {
+                container.style.display = 'block';
+                const months = (map && typeof map.lambAgeMonths !== 'undefined') ? parseInt(map.lambAgeMonths, 10) : (parseInt(localStorage.getItem('lambAgeMonths'), 10) || 8);
+                document.getElementById('lambAgeMonths').value = isNaN(months) ? 8 : months;
+              } else {
+                container.style.display = 'none';
+              }
+            }
+          } catch (e) { }
         } catch (e) { /* ignore */ }
       }
       function save(e) {
@@ -235,13 +348,15 @@
           const pg = parseInt(pedigreeSel.value, 10);
           if (!isNaN(pg) && pg >= 1) localStorage.setItem('pedigreeGenerations', String(pg));
         } catch (e) { }
-        alert('Gestation days saved.');
+        alert('Settings saved (gestation length, nursing window, pedigree generations).');
       }
 
       function saveCols(ev) {
         ev && ev.preventDefault();
         const map = {
           breed: !!document.getElementById('colBreed').checked,
+          color: !!document.getElementById('colColor').checked,
+          status: !!document.getElementById('colStatus').checked,
           sire: !!document.getElementById('colSire').checked,
           dam: !!document.getElementById('colDam').checked,
           sireSire: !!document.getElementById('colSireSire').checked,
@@ -263,8 +378,20 @@
           if (parsed && Object.keys(parsed).length && Object.keys(parsed).every(k => typeof parsed[k] === 'boolean')) parsed = { global: parsed };
           const key = document.getElementById('columnsTabSelect').value || 'global';
           parsed = parsed || {};
+          // attach lamb age months when saving for Current Lambs tab
+          if (key === 'current-lambs') {
+            try {
+              const lm = parseInt(document.getElementById('lambAgeMonths').value, 10);
+              map.lambAgeMonths = (!isNaN(lm) && lm >= 0) ? lm : 8;
+              // also persist a global copy for legacy access
+              try { localStorage.setItem('lambAgeMonths', String(map.lambAgeMonths)); } catch (e) { }
+            } catch (e) { map.lambAgeMonths = 8; }
+          } else {
+            // remove any stray lambThresholdMonths from other tabs
+            if (map && typeof map.lambAgeMonths !== 'undefined') delete map.lambAgeMonths;
+          }
           parsed[key] = map;
-          localStorage.setItem('dashboardColumns', JSON.stringify(parsed));
+          localStorage.setItem('actionsColumns', JSON.stringify(parsed));
         } catch (e) { console.warn(e); }
         alert('Dashboard column preferences saved for selected tab. Return to the dashboard to see changes.');
       }
@@ -274,12 +401,53 @@
       document.getElementById('saveColumns').addEventListener('click', saveCols);
       document.getElementById('columnsTabSelect').addEventListener('change', load);
       window.addEventListener('DOMContentLoaded', load);
+
+      // Show invite controls for admin users and wire create action
+      try {
+        const cur = window.getCurrentUser ? window.getCurrentUser() : null;
+        const inviteArea = document.getElementById('inviteArea');
+        const inviteMsg = document.getElementById('inviteMsg');
+        if (inviteArea) inviteArea.style.display = (cur && cur.role === 'admin') ? 'block' : 'none';
+        const inviteBtn = document.getElementById('inviteBtn');
+        if (inviteBtn) inviteBtn.addEventListener('click', async () => {
+          inviteMsg.textContent = '';
+          const u = (document.getElementById('inviteUsername').value || '').trim();
+          const email = (document.getElementById('inviteEmail').value || '').trim();
+          const role = document.getElementById('inviteRole').value || 'viewer';
+          if (!u || !email) { inviteMsg.textContent = 'Username and email required.'; return; }
+          if (typeof window.adminCreateUser !== 'function') { inviteMsg.textContent = 'Create failed: no admin API'; return; }
+          try {
+            const res = await window.adminCreateUser(u, email, role);
+            if (!res || !res.ok) { inviteMsg.textContent = 'Create failed: ' + (res && res.reason ? res.reason : 'error'); return; }
+            const info = [];
+            try { info.push('Role: ' + (window.roleLabel ? window.roleLabel(role) : role)); } catch (e) { info.push('Role: ' + role); }
+            if (res.mailto) info.push('<a href="' + res.mailto + '">Open mail client</a>');
+            if (res.setupLink) info.push('<a href="' + res.setupLink + '" target="_blank">Open setup link</a>');
+            info.push('Temporary password: <strong>' + (res.tempPassword || '') + '</strong>');
+            inviteMsg.innerHTML = 'Invite ready: ' + info.join(' | ');
+            document.getElementById('inviteUsername').value = ''; document.getElementById('inviteEmail').value = '';
+          } catch (e) { inviteMsg.textContent = 'Create failed.'; }
+        });
+      } catch (e) { }
+
+      // Robust toggler: ensure lamb age control is hidden except for Current Lambs
+      function toggleLambAgeVisibility() {
+        try {
+          const sel = document.getElementById('columnsTabSelect');
+          const container = document.getElementById('lambAgeContainer');
+          if (!sel || !container) return;
+          if (sel.value === 'current-lambs') container.style.display = 'block'; else container.style.display = 'none';
+        } catch (e) { /* ignore */ }
+      }
+      try { window.toggleLambAgeVisibility = toggleLambAgeVisibility; } catch (e) { }
+      document.getElementById('columnsTabSelect').addEventListener('change', toggleLambAgeVisibility);
+      window.addEventListener('DOMContentLoaded', toggleLambAgeVisibility);
       // Theme controls
       try {
         const themeSel = document.getElementById('siteThemeSelect');
         const applyBtn = document.getElementById('applyThemeBtn');
         // initialize selection from saved value
-        try { const st = localStorage.getItem('siteTheme') || 'default'; if (themeSel) themeSel.value = st; } catch (e) { }
+        try { const stRaw = localStorage.getItem('siteTheme'); if (stRaw !== null && themeSel) themeSel.value = stRaw; } catch (e) { }
         if (applyBtn && themeSel) applyBtn.addEventListener('click', () => {
           try {
             const val = themeSel.value || 'default';
@@ -311,6 +479,7 @@
             if (btnText && s.buttonText) btnText.value = s.buttonText;
             if (btnHover && s.buttonBgHover) btnHover.value = s.buttonBgHover;
             if (btnCancelBg && s.buttonCancelBg) btnCancelBg.value = s.buttonCancelBg;
+            if (document.getElementById('appearance_textSize') && s.textSize) document.getElementById('appearance_textSize').value = s.textSize;
             if (document.getElementById('appearance_tableBorder') && s.tableBorder) document.getElementById('appearance_tableBorder').value = s.tableBorder;
             if (document.getElementById('appearance_tableZebra') && typeof s.tableZebra !== 'undefined') document.getElementById('appearance_tableZebra').checked = !!s.tableZebra;
             if (zoomSel && s.zoom) zoomSel.value = String(s.zoom);
@@ -324,6 +493,8 @@
           if (btnText && btnText.value) out.buttonText = btnText.value;
           if (btnHover && btnHover.value) out.buttonBgHover = btnHover.value;
           if (btnCancelBg && btnCancelBg.value) out.buttonCancelBg = btnCancelBg.value;
+          const textSizeEl = document.getElementById('appearance_textSize');
+          if (textSizeEl && textSizeEl.value) out.textSize = textSizeEl.value;
           const tableBorderEl = document.getElementById('appearance_tableBorder');
           if (tableBorderEl && tableBorderEl.value) out.tableBorder = tableBorderEl.value;
           const tableZebraEl = document.getElementById('appearance_tableZebra');

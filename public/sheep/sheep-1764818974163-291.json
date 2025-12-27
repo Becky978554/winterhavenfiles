@@ -1,0 +1,37 @@
+{
+  "id": "sheep-1764818974163-291",
+  "name": "93",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "5 years 10 months",
+  "weight": "",
+  "birthDate": "2020-02-02",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Unknown",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2023-12-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-150",
+        "sheep-1764818974160-149"
+      ]
+    },
+    {
+      "date": "2023-03-06",
+      "count": 1,
+      "children": [
+        "sheep-1764818974162-240"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

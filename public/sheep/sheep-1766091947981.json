@@ -1,0 +1,26 @@
+{
+  "id": "sheep-1766091947981",
+  "name": "35 pink",
+  "breed": "",
+  "color": "Chocolate Brown",
+  "sex": "Ewe",
+  "age": "8 months",
+  "weight": 85,
+  "birthDate": "2025-03-31",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 85
+    }
+  ],
+  "breedings": ""
+}

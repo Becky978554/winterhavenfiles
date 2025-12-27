@@ -1,0 +1,37 @@
+{
+  "id": "sheep-1764818974160-131",
+  "name": "9 pink",
+  "breed": "",
+  "color": "White with Red Speckles",
+  "sex": "Ewe",
+  "age": "1 year 4 months",
+  "weight": 115,
+  "birthDate": "2024-08-06",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "80 Spots",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 115
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

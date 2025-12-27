@@ -1,0 +1,49 @@
+{
+  "id": "sheep-1766087670465",
+  "name": "4L ewe",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "2 years 11 months",
+  "weight": "",
+  "birthDate": "2022-12-28",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "36",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": [
+    {
+      "date": "2025-01-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974161-230",
+        "sheep-1764818974161-223"
+      ]
+    },
+    {
+      "date": "2024-03-26",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-123",
+        "sheep-1764818974159-113"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

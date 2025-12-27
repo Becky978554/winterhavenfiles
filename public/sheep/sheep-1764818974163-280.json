@@ -1,0 +1,32 @@
+{
+  "id": "sheep-1764818974163-280",
+  "name": "33 pink",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "11 months",
+  "weight": "",
+  "birthDate": "2025-01-13",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "24L ewe",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": "",
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

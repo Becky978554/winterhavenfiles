@@ -1,0 +1,26 @@
+{
+  "id": "sheep-1764818974164-352",
+  "name": "125",
+  "breed": "",
+  "color": "White with Brown Speckles",
+  "sex": "Ewe",
+  "age": "1 year 11 months",
+  "weight": 85,
+  "birthDate": "2024-01-03",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 85
+    }
+  ],
+  "breedings": ""
+}

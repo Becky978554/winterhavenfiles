@@ -1,0 +1,37 @@
+{
+  "id": "sheep-1764818974157-44",
+  "name": "16 pink",
+  "breed": "",
+  "color": "White with Red Speckles",
+  "sex": "Ewe",
+  "age": "1 year 2 months",
+  "weight": 110,
+  "birthDate": "2024-09-25",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "800 Parsnip",
+  "pedigree": "",
+  "status": "to-be-culled",
+  "notes": "No Shed",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 110
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "sheep-1764818974162-239",
+  "name": "47L Annie",
+  "breed": "",
+  "color": "White with Brown Speckles",
+  "sex": "Ewe",
+  "age": "2 years 2 months",
+  "weight": 125,
+  "birthDate": "2023-10-03",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "72K",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-03-24",
+      "count": 2,
+      "children": [
+        "sheep-1764818974158-64",
+        "sheep-1764818974158-72"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 125
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "sheep-1764821185007-8",
+  "name": "84",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "5 years 9 months",
+  "weight": "",
+  "birthDate": "2020-03-06",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": [
+    {
+      "date": "2024-08-07",
+      "count": 2,
+      "children": [
+        "sheep-1764818974162-276",
+        "sheep-1764818974158-76"
+      ]
+    },
+    {
+      "date": "2023-10-24",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-139",
+        "sheep-1764818974163-301"
+      ]
+    },
+    {
+      "date": "2023-01-04",
+      "count": 2,
+      "children": [
+        "sheep-1764818974158-90",
+        "sheep-1764818974158-88"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

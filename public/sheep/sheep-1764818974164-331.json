@@ -1,0 +1,54 @@
+{
+  "id": "sheep-1764818974164-331",
+  "name": "118",
+  "breed": "",
+  "color": "White",
+  "sex": "Ewe",
+  "age": "10 months",
+  "weight": 100,
+  "birthDate": "2025-01-29",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "Tagless",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-09-03",
+      "count": 2,
+      "children": [
+        "sheep-1764821185007-11",
+        "sheep-1764821185007-10"
+      ]
+    },
+    {
+      "date": "2025-01-08",
+      "count": 2,
+      "children": [
+        "sheep-1764818974164-327",
+        "sheep-1764818974160-170"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 100
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

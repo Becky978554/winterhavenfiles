@@ -1,0 +1,26 @@
+{
+  "id": "sheep-1764818974164-357",
+  "name": "137",
+  "breed": "Katahdin",
+  "color": "White",
+  "sex": "Ewe",
+  "age": "3 months",
+  "weight": 120,
+  "birthDate": "2025-09-03",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "31 (brown)",
+  "dam": "118",
+  "pedigree": "",
+  "status": "",
+  "notes": "No Shed",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 120
+    }
+  ],
+  "breedings": ""
+}

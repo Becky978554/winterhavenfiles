@@ -1,0 +1,32 @@
+{
+  "id": "sheep-1764818974156-9",
+  "name": "36L ewe",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "2 years 8 months",
+  "weight": "",
+  "birthDate": "2023-03-30",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "5132J",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": "",
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

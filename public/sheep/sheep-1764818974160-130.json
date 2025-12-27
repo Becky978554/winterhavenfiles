@@ -1,0 +1,29 @@
+{
+  "id": "sheep-1764818974160-130",
+  "name": "134",
+  "breed": "Katahdin",
+  "color": "Red and White",
+  "sex": "",
+  "age": "3 months",
+  "weight": "",
+  "birthDate": "2025-09-05",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "31 (brown)",
+  "dam": "02 Shorty",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-04-03",
+      "count": 1,
+      "children": [
+        "sheep-1764818974157-61"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

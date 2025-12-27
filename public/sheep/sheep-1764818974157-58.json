@@ -1,0 +1,30 @@
+{
+  "id": "sheep-1764818974157-58",
+  "name": "Sheriff",
+  "breed": "",
+  "color": "Red",
+  "sex": "Ram",
+  "age": "2 years 11 months",
+  "weight": 220,
+  "birthDate": "2022-12-30",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-04-04",
+      "weight": 220
+    },
+    {
+      "date": "2025-12-18",
+      "weight": 220
+    }
+  ],
+  "breedings": ""
+}

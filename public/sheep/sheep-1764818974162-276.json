@@ -1,0 +1,46 @@
+{
+  "id": "sheep-1764818974162-276",
+  "name": "118 sq",
+  "breed": "",
+  "color": "Med Brown",
+  "sex": "Ewe",
+  "age": "2 years",
+  "weight": 100,
+  "birthDate": "2023-12-22",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "24K (Pickles)",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-01-08",
+      "count": 2,
+      "children": [
+        "sheep-1764818974164-327",
+        "sheep-1764818974160-170"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 100
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

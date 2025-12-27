@@ -1,0 +1,26 @@
+{
+  "id": "sheep-1764818974161-219",
+  "name": "185L",
+  "breed": "",
+  "color": "Chocolate Brown",
+  "sex": "Unknown",
+  "age": "1 year 8 months",
+  "weight": 70,
+  "birthDate": "2024-04-10",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "archived",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 70
+    }
+  ],
+  "breedings": ""
+}

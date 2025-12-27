@@ -1,0 +1,53 @@
+{
+  "id": "sheep-1764818974160-159",
+  "name": "800 Parsnip",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "7 years 10 months",
+  "weight": "",
+  "birthDate": "2018-02-02",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Unknown",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-04-04",
+      "count": 1,
+      "children": [
+        "sheep-1764818974157-56"
+      ]
+    },
+    {
+      "date": "2024-09-25",
+      "count": 2,
+      "children": [
+        "sheep-1764818974163-302",
+        "sheep-1764818974160-127"
+      ]
+    },
+    {
+      "date": "2023-12-07",
+      "count": 2,
+      "children": [
+        "sheep-1764818974164-308",
+        "sheep-1764818974160-143"
+      ]
+    },
+    {
+      "date": "2022-12-29",
+      "count": 2,
+      "children": [
+        "sheep-1764818974163-287",
+        "sheep-1764818974164-323"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

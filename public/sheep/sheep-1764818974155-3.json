@@ -1,0 +1,31 @@
+{
+  "id": "sheep-1764818974155-3",
+  "name": "51K",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "3 years 9 months",
+  "weight": "",
+  "birthDate": "2022-03-15",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Henry",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "Cull",
+  "lambings": [
+    {
+      "date": "2023-12-23",
+      "count": 3,
+      "children": [
+        "sheep-1764818974159-95",
+        "sheep-1764818974159-94",
+        "sheep-1764818974160-165"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

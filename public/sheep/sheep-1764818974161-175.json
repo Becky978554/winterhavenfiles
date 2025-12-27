@@ -1,0 +1,54 @@
+{
+  "id": "sheep-1764818974161-175",
+  "name": "96",
+  "breed": "",
+  "color": "White with Red Speckles",
+  "sex": "Ewe",
+  "age": "3 years 9 months",
+  "weight": 140,
+  "birthDate": "2022-03-15",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-01-16",
+      "count": 2,
+      "children": [
+        "sheep-1764818974158-87",
+        "sheep-1764818974158-82"
+      ]
+    },
+    {
+      "date": "2024-03-23",
+      "count": 2,
+      "children": [
+        "sheep-1764818974164-348",
+        "sheep-1764818974159-118"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 140
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

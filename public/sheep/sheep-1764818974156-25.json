@@ -1,0 +1,30 @@
+{
+  "id": "sheep-1764818974156-25",
+  "name": "190 Spots",
+  "breed": "",
+  "color": "",
+  "sex": "Ram",
+  "age": "2 years",
+  "weight": 220,
+  "birthDate": "2023-12-13",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Passion",
+  "dam": "93",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-04-04",
+      "weight": 220
+    },
+    {
+      "date": "2025-12-18",
+      "weight": 220
+    }
+  ],
+  "breedings": ""
+}

@@ -286,22 +286,12 @@
 
   <script src="script.js"></script>
   <script>
-    // Bootstrap sheep data on first visit by writing bundled dataset
     (function () {
       try {
         if (!localStorage.getItem('importedFromRepo')) {
-          var data = window.__initialSheepData;
-          if (!data) {
-            // load bundled file if not inlined yet
-            var s = document.createElement('script');
-            s.src = '/public/data_sheep_bundle.js';
-            s.onload = function () {
-              writeSheep(window.__initialSheepData || []);
-            };
-            document.head.appendChild(s);
-          } else {
-            writeSheep(data);
-          }
+          // No inlined data available here — initialize with empty array to keep page valid.
+          window.__initialSheepData = [];
+          writeSheep(window.__initialSheepData || []);
         }
       } catch (e) { console.warn('bootstrap import failed', e) }
 
@@ -312,7 +302,7 @@
           var ids = existing ? JSON.parse(existing) : [];
           list.forEach(function (s) {
             var id = s.id || s._id || ('sheep-' + Math.random());
-            var key = id.indexOf('sheep-') === 0 ? id : ('sheep-' + id);
+            var key = ('' + id).indexOf('sheep-') === 0 ? id : ('sheep-' + id);
             localStorage.setItem(key, JSON.stringify(s));
             if (ids.indexOf(key) === -1) ids.push(key);
           });

@@ -576,10 +576,10 @@ function matchesTab(sheep, tabId) {
   // view remains useful for day-to-day operations.
   if (!tabId) return true;
   if (tabId === 'all') {
-    // Treat 'All' as the active-ewes view per user request: show only active, non-lamb ewes
+    // Treat 'All' as the active-ewes view per user request: show only active ewes (include lambs)
     const status = String(sheep.status || '').trim();
     const sex = String(sheep.sex || '').trim().toLowerCase();
-    return isActiveStatus(status) && sex === 'ewe' && !isLamb(sheep);
+    return isActiveStatus(status) && (sex === 'ewe' || sex === '' || sex === 'unknown');
   }
   const status = String(sheep.status || '').trim();
   const sex = String(sheep.sex || '').trim().toLowerCase();

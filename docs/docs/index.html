@@ -35,6 +35,37 @@
 <body>
   <div class="container">
     <h1 id="pageTitle">Sheep Management Dashboard</h1>
+    <!-- Debug banner (temporary) -->
+    <style id="debugBannerStyle">#debugBanner{position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:#fffbdd;border:1px solid #f0e68c;padding:6px 10px;border-radius:6px;font-size:13px;color:#333;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)}#debugBanner.hidden{opacity:0;transition:opacity .35s}</style>
+    <div id="debugBanner" aria-hidden="false">Debug: initializing…</div>
+    <script>
+      (function () {
+        try {
+          var banner = document.getElementById('debugBanner');
+          function countLocal() {
+            var keys = 0;
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              if (k && (k + '').indexOf('sheep-') === 0) keys++;
+            }
+            var listLen = 0;
+            try { var p = JSON.parse(localStorage.getItem('sheepList') || '[]'); if (Array.isArray(p)) listLen = p.length; } catch (e) { }
+            return { keys: keys, list: listLen };
+          }
+          var initial = countLocal();
+          var bundleLen = (window.__initialSheepData && Array.isArray(window.__initialSheepData)) ? window.__initialSheepData.length : 0;
+          function render(st) { banner.textContent = 'Bundle:' + bundleLen + ' · Local(list):' + st.list + ' · Keys:' + st.keys + (st.imported != null ? (' · Imported:+' + st.imported) : ''); }
+          render(initial);
+          window.addEventListener('sheep-updated', function () {
+            var after = countLocal();
+            var imported = Math.max(0, after.list - initial.list);
+            render({ list: after.list, keys: after.keys, imported: imported });
+            setTimeout(function () { banner.classList.add('hidden'); setTimeout(function () { banner.remove(); }, 900); }, 30000);
+          });
+          setTimeout(function () { banner.classList.add('hidden'); setTimeout(function () { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); }, 900); }, 30000);
+        } catch (e) { }
+      })();
+    </script>
 
     <div class="top-controls">
       <div class="left">
@@ -308,7 +339,7 @@
                     }
                     return null;
                   }
-                  const candidates = ['./data/sheep.json','data/sheep.json','docs/data/sheep.json','/winterhavenfiles/data/sheep.json','https://raw.githubusercontent.com/Becky978554/winterhavenfiles/main/docs/data/sheep.json'];
+                  const candidates = ['./data/sheep.json', 'data/sheep.json', 'docs/data/sheep.json', '/winterhavenfiles/data/sheep.json', 'https://raw.githubusercontent.com/Becky978554/winterhavenfiles/main/docs/data/sheep.json'];
                   const arr = await tryFetchCandidates(candidates);
                   if (arr && arr.length) writeSheep(arr);
                 } catch (e) { console.warn('bootstrap multi-fetch failed', e); }

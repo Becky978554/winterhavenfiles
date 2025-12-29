@@ -1,0 +1,36 @@
+{
+  "id": "sheep-1764818974164-333",
+  "name": "80 Spots",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "7 years 9 months",
+  "weight": "",
+  "birthDate": "2018-03-06",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Pizza",
+  "dam": "35 Potato",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2024-08-06",
+      "count": 1,
+      "children": [
+        "sheep-1764818974164-347"
+      ]
+    },
+    {
+      "date": "2023-09-23",
+      "count": 1,
+      "children": [
+        "sheep-1764818974163-303"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

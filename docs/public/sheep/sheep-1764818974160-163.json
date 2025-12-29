@@ -1,0 +1,34 @@
+{
+  "id": "sheep-1764818974160-163",
+  "name": "26L",
+  "breed": "",
+  "color": "White",
+  "sex": "Ewe",
+  "age": "2 years 11 months",
+  "weight": 110,
+  "birthDate": "2023-01-09",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-04-02",
+      "count": 1,
+      "children": [
+        "sheep-1764818974157-51"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 110
+    }
+  ],
+  "breedings": ""
+}

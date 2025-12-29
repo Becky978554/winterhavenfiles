@@ -1,0 +1,27 @@
+{
+  "id": "sheep-1764818974159-99",
+  "name": "119 Pink",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "11 months",
+  "weight": "",
+  "birthDate": "2025-01-16",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "96",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": "",
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

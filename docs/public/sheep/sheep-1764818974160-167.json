@@ -1,0 +1,45 @@
+{
+  "id": "sheep-1764818974160-167",
+  "name": "34 Pink",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "11 months",
+  "weight": "",
+  "birthDate": "2024-12-24",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Unknown",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": [
+    {
+      "date": "2025-04-03",
+      "count": 1,
+      "children": [
+        "sheep-1764818974157-61"
+      ]
+    },
+    {
+      "date": "2023-12-30",
+      "count": 2,
+      "children": [
+        "sheep-1764818974159-102",
+        "sheep-1764818974161-216"
+      ]
+    },
+    {
+      "date": "2023-01-11",
+      "count": 2,
+      "children": [
+        "sheep-1764818974161-183",
+        "sheep-1764818974161-188"
+      ]
+    }
+  ],
+  "weights": [],
+  "breedings": ""
+}

@@ -1,0 +1,69 @@
+{
+  "id": "sheep-1764818974158-84",
+  "name": "111",
+  "breed": "",
+  "color": "Red",
+  "sex": "Ewe",
+  "age": "5 years 10 months",
+  "weight": 140,
+  "birthDate": "2020-02-02",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-04-03",
+      "count": 1,
+      "children": [
+        "sheep-1764818974157-57"
+      ]
+    },
+    {
+      "date": "2025-01-06",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-147",
+        "sheep-1764818974161-179"
+      ]
+    },
+    {
+      "date": "2024-08-08",
+      "count": 3,
+      "children": [
+        "sheep-1764818974157-38",
+        "sheep-1764818974158-80",
+        "sheep-1764818974163-294"
+      ]
+    },
+    {
+      "date": "2024-01-05",
+      "count": 1,
+      "children": [
+        "sheep-1764818974158-79"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 140
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

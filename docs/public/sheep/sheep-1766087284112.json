@@ -1,0 +1,45 @@
+{
+  "id": "sheep-1766087284112",
+  "name": "57L Berry",
+  "breed": "",
+  "color": "Med Brown",
+  "sex": "Ewe",
+  "age": "2 years",
+  "weight": 135,
+  "birthDate": "2023-12-14",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "21A Peanut",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-03-15",
+      "count": 1,
+      "children": [
+        "sheep-1764818974158-71"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 135
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "sheep-1764818974160-165",
+  "name": "125ewe",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "1 year 11 months",
+  "weight": "",
+  "birthDate": "2023-12-29",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "86 Popsicle",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": "",
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

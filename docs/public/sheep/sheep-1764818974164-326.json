@@ -1,0 +1,32 @@
+{
+  "id": "sheep-1764818974164-326",
+  "name": "196",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "8 months",
+  "weight": "",
+  "birthDate": "2025-04-04",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "5141",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": "",
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

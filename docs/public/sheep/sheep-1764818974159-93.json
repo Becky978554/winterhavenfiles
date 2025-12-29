@@ -1,0 +1,55 @@
+{
+  "id": "sheep-1764818974159-93",
+  "name": "41 (91J)",
+  "breed": "",
+  "color": "White with Brown Speckles",
+  "sex": "Ewe",
+  "age": "4 years 10 months",
+  "weight": 145,
+  "birthDate": "2021-02-01",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "limp lt front",
+  "lambings": [
+    {
+      "date": "2025-01-18",
+      "count": 3,
+      "children": [
+        "sheep-1764818974162-231",
+        "sheep-1764818974161-227",
+        "sheep-1764818974162-234"
+      ]
+    },
+    {
+      "date": "2023-12-23",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-156",
+        "sheep-1764818974160-157"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 145
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

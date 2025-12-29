@@ -1,0 +1,32 @@
+{
+  "id": "sheep-1766092277142",
+  "name": "197",
+  "breed": "",
+  "color": "White",
+  "sex": "Ewe",
+  "age": "8 months",
+  "weight": 90,
+  "birthDate": "2025-04-04",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "800 Parsnip",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 90
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

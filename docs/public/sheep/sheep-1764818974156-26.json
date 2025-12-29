@@ -1,0 +1,26 @@
+{
+  "id": "sheep-1764818974156-26",
+  "name": "109 L",
+  "breed": "",
+  "color": "White",
+  "sex": "Ewe",
+  "age": "2 years 10 months",
+  "weight": 120,
+  "birthDate": "2023-02-05",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 120
+    }
+  ],
+  "breedings": ""
+}

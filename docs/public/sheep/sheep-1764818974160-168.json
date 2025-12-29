@@ -1,0 +1,42 @@
+{
+  "id": "sheep-1764818974160-168",
+  "name": "113",
+  "breed": "",
+  "color": "Light Brown",
+  "sex": "Ewe",
+  "age": "8 months",
+  "weight": 80,
+  "birthDate": "2025-04-09",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-03-25",
+      "count": 2,
+      "children": [
+        "sheep-1764818974157-45",
+        "sheep-1764818974157-44"
+      ]
+    },
+    {
+      "date": "2024-08-06",
+      "count": 1,
+      "children": [
+        "sheep-1764818974162-268"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 80
+    }
+  ],
+  "breedings": ""
+}

@@ -1,0 +1,38 @@
+{
+  "id": "sheep-1764818974157-48",
+  "name": "49",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "4 years 10 months",
+  "weight": "",
+  "birthDate": "2021-02-10",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Unknown",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": [
+    {
+      "date": "2024-01-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974159-109",
+        "sheep-1764818974159-108"
+      ]
+    },
+    {
+      "date": "2023-03-29",
+      "count": 2,
+      "children": [
+        "sheep-1764818974162-273",
+        "sheep-1764818974161-228"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sheep Reports</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? function (arr) { return crypto.getRandomValues(arr); }
+                : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+              var arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+              return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
+</head>
+
+<body class="reports-page">
+  <div class="container" role="main" aria-labelledby="reportsTitle">
+    <a href="index.html" class="back">← Back</a>
+    <h1 id="reportsTitle">Reports</h1>
+
+    <!-- Import controls moved to Import page (import.html) to avoid duplication -->
+
+    <section id="reportControls">
+      <label for="reportType"><strong>Report:</strong></label>
+      <select id="reportType">
+        <option value="lambingCalendarIcs">Lambing Calendar (with ICS)</option>
+        <option value="lambingCalendar">Lambing Calendar</option>
+        <option value="breedingHistory">Breeding History Report</option>
+        <option value="lambReport">Lamb Report</option>
+        <option value="weightGain">Weight Gain Report</option>
+        <option value="herdReport">Herd Report</option>
+        <option value="ramReport">Ram Report</option>
+        <option value="eweReport">Ewe Report</option>
+        <option value="sireOffspring">Sire Offspring Report</option>
+        <option value="damOffspring">Dam Offspring Report</option>
+        <option value="famachaBcs">FAMACHA / BCS Report</option>
+        <option value="deathReport">Death Report</option>
+        <option value="soldReport">Sold Report</option>
+        <option value="cullReport">Cull Report</option>
+        <option value="ageAsc">Age — Youngest → Oldest</option>
+        <option value="ageDesc">Age — Oldest → Youngest</option>
+        <option value="dueDates">Due Dates — Nearest First</option>
+      </select>
+      <button id="exportCsv">Export CSV</button>
+      <button id="exportIcs">Export ICS</button>
+      <a id="importSheepBtn" class="button" href="import.html">Import Sheep</a>
+      <button id="printReport" class="button">Print</button>
+      <a class="button" href="users.html" data-role="admin">User Management</a>
+    </section>
+    <section id="reportFilters" class="filterform" style="margin-top:12px;">
+      <div class="choosenewfilter pure-g">
+        <div class="filtercell pure-u-1-3">
+          <label><strong>Mark / Mating Date Between</strong></label>
+          <div style="margin-top:6px;"><input type="date" id="matingdate_lowerbound"> — <input type="date"
+              id="matingdate_upperbound"></div>
+        </div>
+
+        <div class="filtercell pure-u-1-3" style="text-align:right;">
+          <button id="generateReport2" class="button">Generate</button>
+        </div>
+      </div>
+    </section>
+    <div style="flex:1 1 auto"></div>
+    </section>
+
+    <section id="reportOutput">
+      <!-- Printable area: summary + table. Print CSS will show only this block. -->
+      <div id="reportPrintArea">
+        <div id="reportSummary" style="margin-bottom:12px;"></div>
+        <div id="reportTableContainer"></div>
+      </div>
+    </section>
+
+    <hr>
+
+    <h2>Notes / Daily Reports</h2>
+    <textarea id="reportText" placeholder="Write your farm report here..."></textarea>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+      <button onclick="saveReport()">Save Report</button>
+    </div>
+
+    <h2>Saved Reports</h2>
+    <ul id="reportList"></ul>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Wire CSV import and template buttons on Reports page
+    (function () {
+      try {
+        const csvFileInput = document.getElementById('csvFile');
+        const importBtn = document.getElementById('importCsvBtn');
+        const overwriteChk = document.getElementById('csvOverwrite');
+        const downloadBtn = document.getElementById('downloadTemplate');
+        const downloadWithDataBtn = document.getElementById('downloadTemplateWithData');
+
+        if (downloadBtn) downloadBtn.addEventListener('click', () => { try { generateTemplateCsv(false); } catch (e) { console.warn(e); } });
+        if (downloadWithDataBtn) downloadWithDataBtn.addEventListener('click', () => { try { generateTemplateCsv(true); } catch (e) { console.warn(e); } });
+
+        if (importBtn && csvFileInput) {
+          importBtn.addEventListener('click', () => {
+            const files = csvFileInput.files;
+            if (!files || files.length === 0) return alert('Please choose a CSV file to import.');
+            const file = files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const text = e.target.result;
+              importSheepCsvWithPreview(text, !!(overwriteChk && overwriteChk.checked));
+            };
+            reader.onerror = (e) => { console.error(e); alert('Failed to read file.'); };
+            reader.readAsText(file, 'utf-8');
+          });
+        }
+      } catch (e) { console.warn('Reports import wiring failed', e); }
+      // Wire Print button
+      try {
+        const printBtn = document.getElementById('printReport');
+        if (printBtn) printBtn.addEventListener('click', () => { window.print(); });
+      } catch (e) { }
+    })();
+    // If a focus was set by a tile click, pre-select a matching report
+    (function applyTileFocus() {
+      try {
+        const raw = localStorage.getItem('reportFocus');
+        if (!raw) return;
+        let focus = null;
+        try { focus = JSON.parse(raw); } catch (e) { focus = { key: raw, label: raw }; }
+        // mapping from tile keys to reportType values
+        const map = {
+          'chart-lambs-per-year': 'lambReport',
+          'chart-conception': 'breedingHistory',
+          'chart-twinning': 'lambReport',
+          'chart-avg-bw': 'lambReport',
+          'ewes-recorded-pregnant': 'dueDates',
+          'total-active-ewes': 'herdReport'
+        };
+        const sel = document.getElementById('reportType');
+        if (!sel) { localStorage.removeItem('reportFocus'); return; }
+        const k = (focus && focus.key) ? String(focus.key) : null;
+        let pick = null;
+        if (k && map[k]) pick = map[k];
+        if (!pick && k) {
+          // heuristics
+          if (k.indexOf('lamb') !== -1) pick = 'lambReport';
+          else if (k.indexOf('preg') !== -1 || k.indexOf('bred') !== -1 || k.indexOf('due') !== -1) pick = 'dueDates';
+          else if (k.indexOf('ewe') !== -1) pick = 'eweReport';
+          else if (k.indexOf('ram') !== -1) pick = 'ramReport';
+          else pick = 'herdReport';
+        }
+        if (pick) {
+          try { sel.value = pick; } catch (e) { }
+          // scroll to report controls and focus the generate button
+          try { document.getElementById('reportControls').scrollIntoView({ behavior: 'smooth' }); } catch (e) { }
+        }
+        // remove the focus key after applying
+        localStorage.removeItem('reportFocus');
+      } catch (e) { /* non-fatal */ }
+    })();
+  </script>
+  <script>
+    // After the main reports wiring, initialize reports and apply any tile focus
+    window.addEventListener('DOMContentLoaded', () => {
+      try { if (typeof initReports === 'function') initReports(); } catch (e) { }
+      try {
+        const raw = localStorage.getItem('reportFocus');
+        if (!raw) return;
+        let focus = null;
+        try { focus = JSON.parse(raw); } catch (e) { focus = { key: raw, label: raw }; }
+
+        // Insert a small banner showing which tile triggered navigation
+        try {
+          const banner = document.createElement('div');
+          banner.id = 'tileBanner';
+          banner.className = 'tile-banner';
+          banner.textContent = 'Showing report for: ' + (focus.label || focus.key || '');
+          const container = document.querySelector('.container');
+          if (container) container.insertBefore(banner, container.querySelector('#reportImportControls'));
+        } catch (e) { }
+
+        // Mapping from tile keys to reportType values (can be extended)
+        const map = {
+          'chart-lambs-per-year': 'lambReport',
+          'chart-conception': 'breedingHistory',
+          'chart-twinning': 'lambReport',
+          'chart-avg-bw': 'lambReport',
+          'ewes-recorded-pregnant': 'dueDates',
+          'total-active-ewes': 'herdReport'
+        };
+
+        const sel = document.getElementById('reportType');
+        if (sel) {
+          const k = (focus && focus.key) ? String(focus.key) : null;
+          let pick = null;
+          if (k && map[k]) pick = map[k];
+          if (!pick && k) {
+            if (k.indexOf('lamb') !== -1) pick = 'lambReport';
+            else if (k.indexOf('preg') !== -1 || k.indexOf('bred') !== -1 || k.indexOf('due') !== -1) pick = 'dueDates';
+            else if (k.indexOf('ewe') !== -1) pick = 'eweReport';
+            else if (k.indexOf('ram') !== -1) pick = 'ramReport';
+            else pick = 'herdReport';
+          }
+          if (pick) {
+            try { sel.value = pick; } catch (e) { }
+          }
+        }
+
+        // Trigger generation after a short delay so handlers are wired
+        setTimeout(() => {
+          try {
+            const gen = document.getElementById('generateReport') || document.getElementById('generateReport2');
+            if (gen) gen.click();
+          } catch (e) { }
+          try { localStorage.removeItem('reportFocus'); } catch (e) { }
+        }, 120);
+      } catch (e) { /* non-fatal */ }
+    });
+  </script>
+</body>
+
+</html>

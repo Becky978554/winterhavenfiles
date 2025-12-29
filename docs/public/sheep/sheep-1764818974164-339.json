@@ -1,0 +1,48 @@
+{
+  "id": "sheep-1764818974164-339",
+  "name": "111 sq",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "2 years 11 months",
+  "weight": "",
+  "birthDate": "2023-01-08",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "23",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-01-06",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-147",
+        "sheep-1764818974161-179"
+      ]
+    },
+    {
+      "date": "2024-01-05",
+      "count": 1,
+      "children": [
+        "sheep-1764818974158-79"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

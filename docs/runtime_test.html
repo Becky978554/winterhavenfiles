@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Runtime Test Harness</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 18px;
+    }
+
+    #output {
+      white-space: pre-wrap;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 10px;
+      min-height: 200px;
+      max-height: 60vh;
+      overflow: auto;
+    }
+
+    .ok {
+      color: green;
+    }
+
+    .err {
+      color: darkred;
+    }
+
+    button {
+      margin-right: 8px;
+    }
+  </style>
+  <script>
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? function (arr) { return crypto.getRandomValues(arr); }
+                : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+              var arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+              return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
+  // Lightweight harness to capture runtime errors and report them
+  (function () {
+  function append(msg, cls) {
+  const out = document.getElementById('output');
+  if (!out) return;
+  const el = document.createElement('div');
+  if (cls) el.className = cls;
+  el.textContent = msg;
+  out.appendChild(el);
+  out.scrollTop = out.scrollHeight;
+  try { console.log(msg); } catch (e) { }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+  const out = document.getElementById('output');
+  if (out) out.innerHTML = '';
+
+  window.onerror = function (message, source, lineno, colno, error) {
+  append(`[onerror] ${message} (at ${source}:${lineno}:${colno})`, 'err');
+  if (error && error.stack) append(error.stack, 'err');
+  return false; // allow default handling as well
+  };
+
+  window.addEventListener('error', function (ev) {
+  try {
+  const e = ev.error || ev;
+  append(`[error event] ${e && e.message ? e.message : String(ev)}`, 'err');
+  if (e && e.stack) append(e.stack, 'err');
+  } catch (e) { append('[error event handler failure] ' + String(e), 'err'); }
+  });
+
+  window.addEventListener('unhandledrejection', function (ev) {
+  try {
+  append('[unhandledrejection] ' + String(ev.reason), 'err');
+  if (ev.reason && ev.reason.stack) append(ev.reason.stack, 'err');
+  } catch (e) { append('[unhandledrejection handler failure] ' + String(e), 'err'); }
+  });
+
+  document.getElementById('runChecks').addEventListener('click', async () => {
+  append('--- Running smoke checks ---', '');
+  const checks = [
+  { name: 'initColorSelects', fn: window.initColorSelects },
+  { name: 'getAllSheep', fn: window.getAllSheep },
+  { name: 'loadSheepList', fn: window.loadSheepList },
+  { name: 'loadSheepDetail', fn: window.loadSheepDetail },
+  { name: 'updateAutoPedigree', fn: window.updateAutoPedigree }
+  ];
+
+  for (let c of checks) {
+  try {
+  if (typeof c.fn === 'function') {
+  append(`Calling ${c.name}()...`, '');
+  // call with conservative args where appropriate
+  if (c.name === 'updateAutoPedigree') {
+  try { c.fn('TEST-ID'); append(`${c.name}() completed`, 'ok'); } catch (e) { append(`${c.name}() threw: ${e}`, 'err');
+  }
+  } else {
+  try { c.fn(); append(`${c.name}() completed`, 'ok'); } catch (e) { append(`${c.name}() threw: ${e}`, 'err'); }
+  }
+  } else {
+  append(`${c.name}() not found`, 'err');
+  }
+  } catch (e) { append(`Error invoking ${c.name}: ${e}`, 'err'); }
+  }
+
+  append('--- Smoke checks finished ---', '');
+  });
+
+  document.getElementById('clearOutput').addEventListener('click', () => {
+  const out = document.getElementById('output'); if (out) out.innerHTML = '';
+  });
+
+  });
+  })();
+  </script>
+</head>
+
+<body>
+  <h2>Runtime Test Harness</h2>
+  <p>This page loads the app's <code>script.js</code> and captures JS errors, unhandled rejections, and runtime
+    exceptions. Use the "Run smoke checks" button to call a few common functions (guarded). Any exceptions will appear
+    below.</p>
+  <p>
+    <button id="runChecks">Run smoke checks</button>
+    <button id="clearOutput">Clear output</button>
+  </p>
+  <div id="output">Booting harness...</div>
+
+  <!-- Load the app script after the harness handlers are installed -->
+  <script src="script.js"></script>
+</body>
+
+</html>

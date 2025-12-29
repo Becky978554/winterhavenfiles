@@ -1,0 +1,56 @@
+{
+  "id": "sheep-1766086882076",
+  "name": "28L",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "2 years 9 months",
+  "weight": "",
+  "birthDate": "2023-03-12",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "21A Peanut",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-03-28",
+      "count": 2,
+      "children": [
+        "sheep-1764818974157-58",
+        "sheep-1764818974157-50"
+      ]
+    },
+    {
+      "date": "2025-02-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974158-85",
+        "sheep-1764818974164-342"
+      ]
+    },
+    {
+      "date": "2024-04-10",
+      "count": 1,
+      "children": [
+        "sheep-1764818974160-148"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

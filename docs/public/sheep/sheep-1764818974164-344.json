@@ -1,0 +1,36 @@
+{
+  "id": "sheep-1764818974164-344",
+  "name": "128L",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "1 year 11 months",
+  "weight": "",
+  "birthDate": "2023-12-30",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "34",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-02-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974158-85",
+        "sheep-1764818974164-342"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

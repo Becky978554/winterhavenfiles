@@ -1,0 +1,30 @@
+{
+  "id": "sheep-1764818974164-353",
+  "name": "22 (round)",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "10 years 8 months",
+  "weight": "",
+  "birthDate": "2015-03-25",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": [
+    {
+      "date": "2023-12-30",
+      "count": 2,
+      "children": [
+        "sheep-1764818974164-336",
+        "sheep-1764818974164-346"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

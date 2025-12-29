@@ -1,0 +1,57 @@
+{
+  "id": "sheep-1764818974158-78",
+  "name": "86 Popsicle",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "6 years 10 months",
+  "weight": "",
+  "birthDate": "2019-02-02",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "2C Pecan",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2024-12-16",
+      "count": 2,
+      "children": [
+        "sheep-1764818974163-306",
+        "sheep-1764818974164-309"
+      ]
+    },
+    {
+      "date": "2023-12-29",
+      "count": 2,
+      "children": [
+        "sheep-1764818974159-99",
+        "sheep-1764818974159-100"
+      ]
+    },
+    {
+      "date": "2023-01-05",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-130",
+        "sheep-1764818974159-120"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

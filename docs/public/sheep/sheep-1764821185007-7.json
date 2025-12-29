@@ -1,0 +1,30 @@
+{
+  "id": "sheep-1764821185007-7",
+  "name": "107",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "3 years 9 months",
+  "weight": "",
+  "birthDate": "2022-03-15",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "Henry",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": [
+    {
+      "date": "2023-10-02",
+      "count": 2,
+      "children": [
+        "sheep-1764818974162-272",
+        "sheep-1764818974162-263"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": ""
+}

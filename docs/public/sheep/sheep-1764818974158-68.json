@@ -1,0 +1,37 @@
+{
+  "id": "sheep-1764818974158-68",
+  "name": "4 pink",
+  "breed": "",
+  "color": "White with Tricolour Speckles",
+  "sex": "Ewe",
+  "age": "1 year 4 months",
+  "weight": 130,
+  "birthDate": "2024-07-31",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "120",
+  "pedigree": "",
+  "status": "active",
+  "notes": "No shed",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 130
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

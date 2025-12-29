@@ -1,0 +1,11 @@
+{
+  "scribe_extension_state": "{\"id\":\"okfkdaglfjjjfefdcppliegebpoegaii\",\"version\":\"2.71.0\",\"lastHeard\":1766779502523}",
+  "dashboardColumns": "{\"active-ewes\":{\"breed\":false,\"color\":true,\"sire\":true,\"dam\":true,\"sireSire\":false,\"notes\":true,\"age\":true,\"weight\":false,\"sex\":false,\"pastLambing\":true,\"bredDate\":true,\"daysUntil\":true,\"daysPost\":true,\"expectedDueDate\":true,\"order\":[\"select\",\"name\",\"sire\",\"dam\",\"color\",\"sireSire\",\"breed\",\"notes\",\"age\",\"weight\",\"sex\",\"pastLambing\",\"bredDate\",\"daysUntil\",\"daysPost\",\"expectedDueDate\",\"actions\"]}}",
+  "users": "{\"Rwinter\":{\"passwordHash\":\"7c2c0307dbc11975ad56fc2aaebc4ec7f06dc896a27e356bfd18cc03cab9ea45\",\"role\":\"admin\"}}",
+  "siteTheme": "default",
+  "currentUser": "{\"username\":\"Rwinter\",\"role\":\"admin\"}",
+  "table-colwidths-sheepTable": "[0,112,104,115,64,0,0,66,101,0,0,86,90,109,107,104,0]",
+  "migration.addDatedWeights.2025-12-18": "1",
+  "adminBootstrapDone": "1",
+  "appearanceSettings": "{\"pageBg\":\"#ffffff\",\"buttonBg\":\"#0b66c3\",\"buttonText\":\"#ffffff\",\"buttonBgHover\":\"#074a8a\",\"buttonCancelBg\":\"#e53935\",\"tableBorder\":\"#000000\",\"tableZebra\":false,\"zoom\":1}"
+}

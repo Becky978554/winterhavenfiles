@@ -1,0 +1,37 @@
+{
+  "id": "sheep-1764818974161-195",
+  "name": "25 pink",
+  "breed": "",
+  "color": "Light Brown",
+  "sex": "Ewe",
+  "age": "11 months",
+  "weight": 95,
+  "birthDate": "2025-01-07",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "25K Plum",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 95
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "sheep-1764818974158-86",
+  "name": "131 ewe",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "1 year 11 months",
+  "weight": "",
+  "birthDate": "2024-01-13",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "49",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "culled",
+  "lambings": "",
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

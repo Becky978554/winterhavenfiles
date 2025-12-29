@@ -1,0 +1,71 @@
+{
+  "id": "sheep-1764818974159-95",
+  "name": "122",
+  "breed": "",
+  "color": "White",
+  "sex": "Ewe",
+  "age": "3 years 11 months",
+  "weight": 160,
+  "birthDate": "2022-01-04",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "36",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-01-06",
+      "count": 2,
+      "children": [
+        "sheep-1764818974161-184",
+        "sheep-1764818974161-180"
+      ]
+    },
+    {
+      "date": "2023-12-23",
+      "count": 3,
+      "children": [
+        "sheep-1764818974159-95",
+        "sheep-1764818974159-94",
+        "sheep-1764818974160-165"
+      ]
+    },
+    {
+      "date": "2023-12-21",
+      "count": 1,
+      "children": [
+        "sheep-1764818974164-318"
+      ]
+    },
+    {
+      "date": "2023-03-09",
+      "count": 3,
+      "children": [
+        "sheep-1764818974157-34",
+        "sheep-1764818974161-196",
+        "sheep-1764818974161-200"
+      ]
+    }
+  ],
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 160
+    }
+  ],
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

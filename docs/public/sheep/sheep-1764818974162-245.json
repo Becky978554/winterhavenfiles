@@ -1,0 +1,98 @@
+{
+  "id": "sheep-1764818974162-245",
+  "name": "24",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "5 years 10 months",
+  "weight": "",
+  "birthDate": "2020-02-02",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-03-31",
+      "count": 1,
+      "children": [
+        "sheep-1764818974158-68"
+      ]
+    },
+    {
+      "date": "2025-01-17",
+      "count": 3,
+      "children": [
+        "sheep-1764818974161-209",
+        "sheep-1764818974161-222",
+        "sheep-1764818974161-226"
+      ]
+    },
+    {
+      "date": "2025-01-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974161-230",
+        "sheep-1764818974161-223"
+      ]
+    },
+    {
+      "date": "2024-08-08",
+      "count": 2,
+      "children": [
+        "sheep-1764818974159-105",
+        "sheep-1764818974158-91"
+      ]
+    },
+    {
+      "date": "2024-03-26",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-123",
+        "sheep-1764818974159-113"
+      ]
+    },
+    {
+      "date": "2023-12-22",
+      "count": 2,
+      "children": [
+        "sheep-1764818974164-321",
+        "sheep-1764818974157-35"
+      ]
+    },
+    {
+      "date": "2023-10-20",
+      "count": 2,
+      "children": [
+        "sheep-1764818974163-291",
+        "sheep-1764818974164-329"
+      ]
+    },
+    {
+      "date": "2023-03-24",
+      "count": 1,
+      "children": [
+        "sheep-1764818974162-267"
+      ]
+    },
+    {
+      "date": "2023-01-09",
+      "count": 1,
+      "children": [
+        "sheep-1764818974160-173"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

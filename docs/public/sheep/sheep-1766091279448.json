@@ -1,0 +1,56 @@
+{
+  "id": "sheep-1766091279448",
+  "name": "5141",
+  "breed": "",
+  "color": "",
+  "sex": "",
+  "age": "4 years 10 months",
+  "weight": "",
+  "birthDate": "2021-02-10",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-04-04",
+      "count": 2,
+      "children": [
+        "sheep-1764818974157-54",
+        "sheep-1764818974157-60"
+      ]
+    },
+    {
+      "date": "2023-12-22",
+      "count": 1,
+      "children": [
+        "sheep-1764818974160-155"
+      ]
+    },
+    {
+      "date": "2023-03-25",
+      "count": 2,
+      "children": [
+        "sheep-1764818974161-224",
+        "sheep-1764818974162-270"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-12-08",
+      "sire": "",
+      "note": "Recorded breeding"
+    },
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

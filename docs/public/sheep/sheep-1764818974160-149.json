@@ -1,0 +1,44 @@
+{
+  "id": "sheep-1764818974160-149",
+  "name": "24L ewe",
+  "breed": "",
+  "color": "",
+  "sex": "ewe",
+  "age": "2 years 10 months",
+  "weight": "",
+  "birthDate": "2023-02-09",
+  "bredDate": "2025-08-02",
+  "breedingDate": "2025-08-02",
+  "expectedDueDate": "2025-12-27",
+  "sire": "sheep-1764818974164-357",
+  "dam": "56",
+  "pedigree": "",
+  "status": "culled",
+  "notes": "",
+  "lambings": [
+    {
+      "date": "2025-01-13",
+      "count": 2,
+      "children": [
+        "sheep-1764818974161-230",
+        "sheep-1764818974161-223"
+      ]
+    },
+    {
+      "date": "2024-03-26",
+      "count": 2,
+      "children": [
+        "sheep-1764818974160-123",
+        "sheep-1764818974159-113"
+      ]
+    }
+  ],
+  "weights": "",
+  "breedings": [
+    {
+      "date": "2025-08-02",
+      "sire": "sheep-1764818974164-357",
+      "note": "Recorded breeding"
+    }
+  ]
+}

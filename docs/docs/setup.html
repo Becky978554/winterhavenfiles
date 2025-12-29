@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Account Setup — Sheep Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container" role="main" aria-labelledby="setupTitle">
+    <h1 id="setupTitle">Set your password</h1>
+    <p id="setupMsg" style="color:#666">Follow the link sent by your administrator to complete account setup.</p>
+
+    <div id="setupBox" style="display:none; max-width:480px;">
+      <div style="margin-bottom:8px;"><strong id="setupUser"></strong></div>
+      <label for="newpw">New password</label>
+      <input id="newpw" type="password" />
+      <label for="newpw2">Confirm</label>
+      <input id="newpw2" type="password" />
+      <div style="margin-top:8px; display:flex; gap:8px;"><button id="doSetup" class="button button-primary">Set
+          password</button><a href="login.html" class="button">Cancel</a></div>
+      <div id="setupResult" style="color:#a33; margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    (function () {
+      function param(name) {
+        try { const p = new URLSearchParams(location.search); return p.get(name); } catch (e) { return null; }
+      }
+      const token = param('token');
+      const box = document.getElementById('setupBox');
+      const msg = document.getElementById('setupMsg');
+      const userEl = document.getElementById('setupUser');
+      const result = document.getElementById('setupResult');
+
+      if (!token) { msg.textContent = 'Missing setup token.'; return; }
+      // find user by token
+      const u = (window.findUserBySetupToken ? window.findUserBySetupToken(token) : null);
+      if (!u) { msg.textContent = 'Invalid or expired setup token.'; return; }
+      userEl.textContent = 'Account: ' + (u.username || '(unknown)');
+      box.style.display = 'block';
+      msg.style.display = 'none';
+
+      document.getElementById('doSetup').addEventListener('click', async function () {
+        result.textContent = '';
+        const p1 = document.getElementById('newpw').value || '';
+        const p2 = document.getElementById('newpw2').value || '';
+        if (!p1) { result.textContent = 'Enter a password.'; return; }
+        if (p1 !== p2) { result.textContent = 'Passwords do not match.'; return; }
+        if (!window.completeSetupWithToken) { result.textContent = 'Setup API unavailable.'; return; }
+        try {
+          const res = await window.completeSetupWithToken(token, p1);
+          if (res && res.ok) {
+            alert('Password set — you can now sign in.');
+            try { location.href = 'login.html'; } catch (e) { }
+          } else {
+            result.textContent = 'Setup failed: ' + (res && res.reason ? res.reason : 'error');
+          }
+        } catch (e) { result.textContent = 'Setup failed.'; }
+      });
+
+    })();
+  </script>
+</body>
+
+</html>

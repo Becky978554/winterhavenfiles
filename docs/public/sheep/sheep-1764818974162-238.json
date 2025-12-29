@@ -1,0 +1,26 @@
+{
+  "id": "sheep-1764818974162-238",
+  "name": "119 Blue",
+  "breed": "",
+  "color": "Dark Brown",
+  "sex": "Ewe",
+  "age": "8 months",
+  "weight": 85,
+  "birthDate": "2025-04-07",
+  "bredDate": "",
+  "breedingDate": "",
+  "expectedDueDate": "",
+  "sire": "",
+  "dam": "",
+  "pedigree": "",
+  "status": "active",
+  "notes": "",
+  "lambings": "",
+  "weights": [
+    {
+      "date": "2025-12-18",
+      "weight": 85
+    }
+  ],
+  "breedings": ""
+}

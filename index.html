@@ -289,26 +289,50 @@
     (function () {
       try {
         if (!localStorage.getItem('importedFromRepo')) {
-          // No inlined data available here — initialize with empty array to keep page valid.
-          window.__initialSheepData = [];
-          writeSheep(window.__initialSheepData || []);
+          try {
+            // If an inline bundle is present and looks complete, use it; otherwise avoid bootstrapping from a small incomplete set.
+            if (window.__initialSheepData && Array.isArray(window.__initialSheepData) && window.__initialSheepData.length >= 100) {
+              writeSheep(window.__initialSheepData);
+            } else {
+              // Fallback: attempt to fetch the aggregated data file
+              (async function () {
+                try {
+                  var res = await fetch('/data/sheep.json', { cache: 'no-store' });
+                  if (res.ok) {
+                    var arr = await res.json();
+                    if (Array.isArray(arr) && arr.length) writeSheep(arr);
+                  }
+                } catch (e) { console.warn('bootstrap fetch fallback failed', e); }
+              })();
+            }
+          } catch (e) { console.warn('bootstrap import failed', e); }
         }
       } catch (e) { console.warn('bootstrap import failed', e) }
 
       function writeSheep(list) {
         if (!list || !list.length) return;
         try {
-          var existing = localStorage.getItem('sheepList');
-          var ids = existing ? JSON.parse(existing) : [];
+          var existingRaw = localStorage.getItem('sheepList');
+          var masterObjects = [];
+          try {
+            var parsed = existingRaw ? JSON.parse(existingRaw) : [];
+            if (Array.isArray(parsed) && parsed.length && typeof parsed[0] === 'object') masterObjects = parsed.slice();
+          } catch (e) { masterObjects = []; }
+
           list.forEach(function (s) {
-            var id = s.id || s._id || ('sheep-' + Math.random());
-            var key = ('' + id).indexOf('sheep-') === 0 ? id : ('sheep-' + id);
-            localStorage.setItem(key, JSON.stringify(s));
-            if (ids.indexOf(key) === -1) ids.push(key);
+            try {
+              var id = s.id || s._id || ('sheep-' + Math.random());
+              if (("" + id).indexOf('sheep-') !== 0) id = 'sheep-' + id;
+              s.id = id.replace(/^sheep-/, '') || s.id;
+              var key = id;
+              localStorage.setItem(key, JSON.stringify(s));
+              var exists = masterObjects.some(function (m) { return m && (m.id || '').toString() === (s.id || '').toString(); });
+              if (!exists) masterObjects.push(s);
+            } catch (e) { }
           });
-          localStorage.setItem('sheepList', JSON.stringify(ids));
+          localStorage.setItem('sheepList', JSON.stringify(masterObjects));
           localStorage.setItem('importedFromRepo', new Date().toISOString());
-          window.dispatchEvent(new Event('sheep-updated'));
+          try { window.dispatchEvent(new Event('sheep-updated')); } catch (e) { }
           console.log('Bootstrapped', list.length, 'sheep into localStorage');
         } catch (e) { console.warn('writeSheep failed', e) }
       }

@@ -285,13 +285,33 @@
   </div>
 
   <script src="script.js"></script>
+  <script src="public/data_sheep_bundle.js"></script>
   <script>
     (function () {
       try {
         if (!localStorage.getItem('importedFromRepo')) {
-          // No inlined data available here — initialize with empty array to keep page valid.
-          window.__initialSheepData = [];
-          writeSheep(window.__initialSheepData || []);
+          (async function () {
+            try {
+              if (window.__initialSheepData && window.__initialSheepData.length) {
+                writeSheep(window.__initialSheepData);
+                return;
+              }
+              // Fallback: try fetching aggregated data
+              try {
+                var res = await fetch('/data/sheep.json', { cache: 'no-store' });
+                if (res.ok) {
+                  var arr = await res.json();
+                  if (Array.isArray(arr) && arr.length) {
+                    writeSheep(arr);
+                    return;
+                  }
+                }
+              } catch (e) {
+                console.warn('fetch fallback failed', e);
+              }
+              // No data available; do nothing to avoid overwriting user's data
+            } catch (e) { console.warn('bootstrap async failed', e) }
+          })();
         }
       } catch (e) { console.warn('bootstrap import failed', e) }
 

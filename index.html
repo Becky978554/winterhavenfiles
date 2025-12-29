@@ -294,15 +294,25 @@
             if (window.__initialSheepData && Array.isArray(window.__initialSheepData) && window.__initialSheepData.length >= 100) {
               writeSheep(window.__initialSheepData);
             } else {
-              // Fallback: attempt to fetch the aggregated data file
+              // Fallback: try multiple candidate paths for aggregated JSON
               (async function () {
                 try {
-                  var res = await fetch('/data/sheep.json', { cache: 'no-store' });
-                  if (res.ok) {
-                    var arr = await res.json();
-                    if (Array.isArray(arr) && arr.length) writeSheep(arr);
+                  async function tryFetchCandidates(cands) {
+                    for (let u of cands) {
+                      try {
+                        const res = await fetch(u, { cache: 'no-store' });
+                        if (res && res.ok) {
+                          const arr = await res.json();
+                          if (Array.isArray(arr) && arr.length) return arr;
+                        }
+                      } catch (e) { }
+                    }
+                    return null;
                   }
-                } catch (e) { console.warn('bootstrap fetch fallback failed', e); }
+                  const candidates = ['./data/sheep.json','data/sheep.json','docs/data/sheep.json','/winterhavenfiles/data/sheep.json','https://raw.githubusercontent.com/Becky978554/winterhavenfiles/main/docs/data/sheep.json'];
+                  const arr = await tryFetchCandidates(candidates);
+                  if (arr && arr.length) writeSheep(arr);
+                } catch (e) { console.warn('bootstrap multi-fetch failed', e); }
               })();
             }
           } catch (e) { console.warn('bootstrap import failed', e); }

@@ -297,19 +297,31 @@
                 writeSheep(window.__initialSheepData);
                 return;
               }
-              // Fallback: try fetching aggregated data
+              // Fallback: try fetching aggregated data from multiple candidate paths
               try {
-                var res = await fetch('/data/sheep.json', { cache: 'no-store' });
-                if (res.ok) {
-                  var arr = await res.json();
-                  if (Array.isArray(arr) && arr.length) {
-                    writeSheep(arr);
-                    return;
+                async function tryFetchCandidates(cands) {
+                  for (let u of cands) {
+                    try {
+                      const res = await fetch(u, { cache: 'no-store' });
+                      if (res && res.ok) {
+                        const arr = await res.json();
+                        if (Array.isArray(arr) && arr.length) return arr;
+                      }
+                    } catch (e) { /* try next */ }
                   }
+                  return null;
                 }
-              } catch (e) {
-                console.warn('fetch fallback failed', e);
-              }
+
+                const candidates = [
+                  './data/sheep.json',
+                  'data/sheep.json',
+                  'docs/data/sheep.json',
+                  '/winterhavenfiles/data/sheep.json',
+                  'https://raw.githubusercontent.com/Becky978554/winterhavenfiles/main/docs/data/sheep.json'
+                ];
+                const arr = await tryFetchCandidates(candidates);
+                if (arr && arr.length) { writeSheep(arr); return; }
+              } catch (e) { console.warn('bootstrap multi-fetch failed', e); }
               // No data available; do nothing to avoid overwriting user's data
             } catch (e) { console.warn('bootstrap async failed', e) }
           })();

@@ -6498,8 +6498,11 @@ function renderBreedingSummary() {
                       const adjStartDate = adjStartVal ? new Date(adjStartVal) : null;
                       const adjEndDate = adjEndVal ? new Date(adjEndVal) : null;
                       function _sameDay(d1, d2) {
-                        try { const x = new Date(d1); const y = new Date(d2); return x && y && !isNaN(x.getTime()) && !isNaN(y.getTime()) && x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); } catch (e) { return false; }
+                          try { const x = new Date(d1); const y = new Date(d2); return x && y && !isNaN(x.getTime()) && !isNaN(y.getTime()) && x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); } catch (e) { return false; }
                       }
+                        function _withinDays(d1, d2, days) {
+                          try { const x = new Date(d1); const y = new Date(d2); if (!x || !y || isNaN(x.getTime()) || isNaN(y.getTime())) return false; const diff = Math.abs(x.getTime() - y.getTime()); return diff <= (Math.max(1, parseInt(days, 10)) * 24 * 60 * 60 * 1000); } catch (e) { return false; }
+                        }
                       function _birthWeightFor(l, birth) {
                         try {
                           let bw = parseFloat(l.birthWeight || l.birth_weight || l.birthWeightKg || l.birth_weight_kg || NaN);
@@ -6511,7 +6514,7 @@ function renderBreedingSummary() {
                                 const it = l.weights[i];
                                 const wt = (it && (it.weight !== undefined)) ? parseFloat(it.weight) : (it && (it.w !== undefined) ? parseFloat(it.w) : NaN);
                                 const dt = it && (it.date || it.d || it.weightDate || it.dateRecorded) ? (it.date || it.d || it.weightDate || it.dateRecorded) : null;
-                                if (!isNaN(wt) && wt > 0 && dt && _sameDay(dt, birth)) vals.push(wt);
+                                if (!isNaN(wt) && wt > 0 && dt && (_sameDay(dt, birth) || _withinDays(dt, birth, 1))) vals.push(wt);
                               } catch (e) { }
                             }
                             if (vals.length) return vals.reduce((s, v) => s + v, 0) / vals.length;
@@ -6638,6 +6641,51 @@ function renderBreedingSummary() {
                       });
                       html += '</tbody></table></div>';
                       container.innerHTML = html;
+                      // Make table columns sortable by clicking headers
+                      try {
+                        const table = container.querySelector('table');
+                        if (table) {
+                          const keyMap = ['name', 'birthDate', 'birthW', 'adjBirth', 'weanW', 'adjWean'];
+                          table.querySelectorAll('th').forEach((th, idx) => {
+                            try {
+                              th.style.cursor = 'pointer';
+                              th.title = 'Click to sort';
+                              th.dataset.dir = th.dataset.dir || '';
+                              th.addEventListener('click', () => {
+                                try {
+                                  const key = keyMap[idx] || 'name';
+                                  const dir = (th.dataset.dir === 'asc') ? 'desc' : 'asc';
+                                  table.querySelectorAll('th').forEach(h => { if (h !== th) h.dataset.dir = ''; });
+                                  th.dataset.dir = dir;
+                                  const cmp = (a, b) => {
+                                    try {
+                                      let va = a[key]; let vb = b[key];
+                                      if (key === 'birthDate') { va = va ? new Date(va).getTime() : -Infinity; vb = vb ? new Date(vb).getTime() : -Infinity; }
+                                      if (key === 'name') { va = (va || '').toString().toLowerCase(); vb = (vb || '').toString().toLowerCase(); }
+                                      if (['birthW', 'adjBirth', 'weanW', 'adjWean'].indexOf(key) >= 0) { va = (va === null || va === undefined) ? -Infinity : parseFloat(va) || 0; vb = (vb === null || vb === undefined) ? -Infinity : parseFloat(vb) || 0; }
+                                      if (va < vb) return dir === 'asc' ? -1 : 1;
+                                      if (va > vb) return dir === 'asc' ? 1 : -1;
+                                      return 0;
+                                    } catch (e) { return 0; }
+                                  };
+                                  rows.sort(cmp);
+                                  const tbody = table.querySelector('tbody');
+                                  if (tbody) {
+                                    tbody.innerHTML = '';
+                                    rows.slice(0, 50).forEach(r => {
+                                      try {
+                                        const bDateText = r.birthDate ? (typeof formatDateLong === 'function' ? formatDateLong(r.birthDate) : r.birthDate) : '';
+                                        const rowHtml = `<tr><td style="padding:4px 6px">${r.name}${r.dam ? ' — dam:' + (typeof getSheepLabel === 'function' ? getSheepLabel(r.dam) : r.dam) : ''}</td><td style="text-align:left;padding:4px 6px">${escapeHtml(bDateText)}</td><td style="text-align:right;padding:4px 6px">${r.birthW !== null ? r.birthW : 'N/A'}</td><td style="text-align:right;padding:4px 6px">${r.adjBirth !== null ? r.adjBirth : 'N/A'}</td><td style="text-align:right;padding:4px 6px">${r.weanW !== null ? r.weanW : 'N/A'}${r.ageDays ? ' (' + r.ageDays + 'd)' : ''}</td><td style="text-align:right;padding:4px 6px">${r.adjWean !== null ? r.adjWean : 'N/A'}</td></tr>`;
+                                        tbody.insertAdjacentHTML('beforeend', rowHtml);
+                                      } catch (e) { }
+                                    });
+                                  }
+                                } catch (e) { }
+                              });
+                            } catch (e) { }
+                          });
+                        }
+                      } catch (e) { }
                       // wire recalc button & input and persist chosen date range to saved window
                       const rec = document.getElementById('fi_recalcAdj');
                       const adjStartEl = document.getElementById('fi_adjStart');

@@ -30,18 +30,20 @@
       } catch (e) { }
     })();
   </script>
-</head>
-
-<body>
-  <div class="container">
-    <h1 id="pageTitle">Sheep Management Dashboard</h1>
-    <!-- Debug banner (temporary) -->
-    <style id="debugBannerStyle">#debugBanner{position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:#fffbdd;border:1px solid #f0e68c;padding:6px 10px;border-radius:6px;font-size:13px;color:#333;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)}#debugBanner.hidden{opacity:0;transition:opacity .35s}</style>
-    <div id="debugBanner" aria-hidden="false">Debug: initializing…</div>
+    <!-- Mobile-only Debug banner -->
+    <style id="debugBannerStyle">@media (min-width:769px){#debugBanner{display:none!important}}#debugBanner{display:none;position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:#fffbdd;border:1px solid #f0e68c;padding:8px 12px;border-radius:8px;font-size:14px;color:#333;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)}#debugBanner.hidden{opacity:0;transition:opacity .35s}</style>
+    <div id="debugBanner" aria-hidden="false" style="display:none">Debug: initializing…</div>
     <script>
       (function () {
         try {
+          var isMobile = false;
+          try { isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth && window.innerWidth <= 768); } catch (e) { }
           var banner = document.getElementById('debugBanner');
+          if (!isMobile) {
+            if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+            return;
+          }
+          banner.style.display = 'block';
           function countLocal() {
             var keys = 0;
             for (var i = 0; i < localStorage.length; i++) {
@@ -60,16 +62,22 @@
             var after = countLocal();
             var imported = Math.max(0, after.list - initial.list);
             render({ list: after.list, keys: after.keys, imported: imported });
-            setTimeout(function () { banner.classList.add('hidden'); setTimeout(function () { banner.remove(); }, 900); }, 30000);
+            setTimeout(function () { if (banner) banner.classList.add('hidden'); setTimeout(function () { try { banner.remove(); } catch (e) { } }, 900); }, 30000);
           });
-          setTimeout(function () { banner.classList.add('hidden'); setTimeout(function () { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); }, 900); }, 30000);
+          setTimeout(function () { if (banner) banner.classList.add('hidden'); setTimeout(function () { try { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); } catch (e) { } }, 900); }, 30000);
         } catch (e) { }
       })();
     </script>
+</head>
 
-    <div class="top-controls">
-      <div class="left">
-        <!-- Import controls moved to Reports page -->
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Sheep Management Dashboard</h1>
+    <!-- Debug banner (temporary) -->
+    <style id="debugBannerStyle">
+      #debugBanner {
+        position: fixed;
+        left: 8px;
       </div>
       <div class="spacer"></div>
       <div class="right">

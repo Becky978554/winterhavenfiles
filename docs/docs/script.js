@@ -6520,6 +6520,42 @@ function renderBreedingSummary() {
                         return null;
                       }
 
+                      // Determine a wean/latest weight that occurred after birth (avoid using birth-day weights as wean)
+                      function _weanWeightFor(l, birth) {
+                        try {
+                          const wDateRawFields = l.weanDate || l.wean_date || l.latestWeightDate || l.weightDate || l.weight_date || '';
+                          if (wDateRawFields) {
+                            const d = new Date(wDateRawFields);
+                            if (!isNaN(d.getTime())) {
+                              if (birth && d.getTime() === birth.getTime()) {
+                                // dated weight on birth day -> treat as birth weight, not wean
+                              } else {
+                                const wVal = parseFloat(l.weaningWeight || l.weanWeight || l.weightAtWean || l.latestWeight || l.weight || NaN);
+                                if (!isNaN(wVal) && wVal > 0) return { w: wVal, date: wDateRawFields };
+                              }
+                            }
+                          }
+                          if (Array.isArray(l.weights) && birth) {
+                            const later = [];
+                            for (let i = 0; i < l.weights.length; i++) {
+                              try {
+                                const it = l.weights[i];
+                                const dt = it && (it.date || it.d || it.weightDate || it.dateRecorded) ? (it.date || it.d || it.weightDate || it.dateRecorded) : null;
+                                const wt = (it && (it.weight !== undefined)) ? parseFloat(it.weight) : (it && (it.w !== undefined) ? parseFloat(it.w) : NaN);
+                                if (dt && !isNaN(new Date(dt).getTime()) && !isNaN(wt) && wt > 0) {
+                                  if (new Date(dt).getTime() > birth.getTime()) later.push({ dt, wt });
+                                }
+                              } catch (e) { }
+                            }
+                            if (later.length) {
+                              later.sort((a, b) => new Date(b.dt) - new Date(a.dt));
+                              return { w: later[0].wt, date: later[0].dt };
+                            }
+                          }
+                          return { w: null, date: '' };
+                        } catch (e) { return { w: null, date: '' }; }
+                      }
+
                       lambs.forEach(l => {
                         try {
                           const birthRaw = l.birthDate || l.birthdate || '';
@@ -6539,9 +6575,10 @@ function renderBreedingSummary() {
                           } catch (e) { }
 
                           const bW = _birthWeightFor(l, birth) || 0;
-                          // try to find a recorded wean/latest weight and date
-                          const w = parseFloat(l.weaningWeight || l.weanWeight || l.weightAtWean || l.latestWeight || l.weight || 0) || 0;
-                          const wDateRaw = l.weanDate || l.wean_date || l.latestWeightDate || l.weightDate || l.weight_date || '';
+                          // try to find a recorded wean/latest weight and date (only weights after birth)
+                          const weanObj = _weanWeightFor(l, birth) || { w: null, date: '' };
+                          const w = (weanObj && weanObj.w) ? parseFloat(weanObj.w) : 0;
+                          const wDateRaw = (weanObj && weanObj.date) ? weanObj.date : '';
                           const wDate = wDateRaw ? new Date(wDateRaw) : null;
                           // If a date range is specified, restrict to lambs (by birth) above; additionally if a wean weight is required for adjusted wean we still need a weight date inside range
                           try {

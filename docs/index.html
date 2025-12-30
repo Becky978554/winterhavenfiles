@@ -36,7 +36,35 @@
   <div class="container">
     <h1 id="pageTitle">Sheep Management Dashboard</h1>
     <!-- Mobile-only Debug banner -->
-    <style id="debugBannerStyle">@media (min-width:769px){#debugBanner{display:none!important}}#debugBanner{display:none;position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:#fffbdd;border:1px solid #f0e68c;padding:8px 12px;border-radius:8px;font-size:14px;color:#333;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.08)}#debugBanner.hidden{opacity:0;transition:opacity .35s}</style>
+    <style id="debugBannerStyle">
+      @media (min-width:769px) {
+        #debugBanner {
+          display: none !important
+        }
+      }
+
+      #debugBanner {
+        display: none;
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        z-index: 9999;
+        background: #fffbdd;
+        border: 1px solid #f0e68c;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #333;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08)
+      }
+
+      #debugBanner.hidden {
+        opacity: 0;
+        transition: opacity .35s
+      }
+    </style>
     <div id="debugBanner" aria-hidden="false" style="display:none">Debug: initializing…</div>
     <script>
       (function () {

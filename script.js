@@ -6667,7 +6667,7 @@ function renderBreedingSummary() {
                       html += '<tbody>';
                       rows.slice(0, 50).forEach(r => {
                         const bDateText = r.birthDate ? (typeof formatDateLong === 'function' ? formatDateLong(r.birthDate) : r.birthDate) : '';
-                        html += `<tr><td style="padding:4px 6px">${r.name}${r.dam ? ' — dam:' + r.dam : ''}</td><td style="text-align:left;padding:4px 6px">${escapeHtml(bDateText)}</td><td style="text-align:right;padding:4px 6px">${r.birthW !== null ? r.birthW : 'N/A'}</td><td style="text-align:right;padding:4px 6px">${r.adjBirth !== null ? r.adjBirth : 'N/A'}</td><td style="text-align:right;padding:4px 6px">${r.weanW !== null ? r.weanW : 'N/A'}${r.ageDays ? ' (' + r.ageDays + 'd)' : ''}</td><td style="text-align:right;padding:4px 6px">${r.adjWean !== null ? r.adjWean : 'N/A'}</td></tr>`;
+                        html += `<tr><td style="padding:4px 6px">${r.name}${r.dam ? ' — dam:' + (typeof getSheepLabel === 'function' ? getSheepLabel(r.dam) : r.dam) : ''}</td><td style="text-align:left;padding:4px 6px">${escapeHtml(bDateText)}</td><td style="text-align:right;padding:4px 6px">${r.birthW !== null ? r.birthW : 'N/A'}</td><td style="text-align:right;padding:4px 6px">${r.adjBirth !== null ? r.adjBirth : 'N/A'}</td><td style="text-align:right;padding:4px 6px">${r.weanW !== null ? r.weanW : 'N/A'}${r.ageDays ? ' (' + r.ageDays + 'd)' : ''}</td><td style="text-align:right;padding:4px 6px">${r.adjWean !== null ? r.adjWean : 'N/A'}</td></tr>`;
                       });
                       html += '</tbody></table></div>';
                       container.innerHTML = html;

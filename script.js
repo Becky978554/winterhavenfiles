@@ -211,6 +211,26 @@ function saveNotes(sheepID) {
   } catch (e) { alert('Failed to save notes; see console.'); console.warn(e); }
 }
 
+// Refresh helper for dashboard widgets: call known render functions safely
+; (function () {
+  function safeCall(fn) { try { if (typeof fn === 'function') fn(); } catch (e) { console.warn('dashboard refresh error', e); } }
+  function debounce(fn, wait) { let t = null; return function () { clearTimeout(t); t = setTimeout(fn, wait || 120); }; }
+  window.refreshDashboardWidgets = function () {
+    try {
+      safeCall(renderBreedingSummary);
+      safeCall(renderBreedingHistory);
+      safeCall(renderBreedingDetails);
+    } catch (e) { console.warn('refreshDashboardWidgets failed', e); }
+  };
+
+  // wire events: data updates and visibility change
+  try {
+    const debounced = debounce(() => { try { window.refreshDashboardWidgets(); } catch (e) { } }, 180);
+    window.addEventListener('sheep-updated', debounced);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') debounced(); });
+  } catch (e) { console.warn('dashboard refresh wiring failed', e); }
+})();
+
 // Render breeding history for a given sheep into the detail page container
 function renderBreedingHistory(sheep) {
   try {
@@ -4383,6 +4403,82 @@ function getGestationDays() {
   return (isNaN(v) || v <= 0) ? 147 : v;
 }
 
+// Global helpers for the shared time window used by dashboard widgets
+try {
+  window.getGlobalTimeWindow = function () {
+    try {
+      const raw = localStorage.getItem('breedingTimeWindow');
+      if (!raw) return { type: 'thisYear' };
+      return JSON.parse(raw);
+    } catch (e) { return { type: 'thisYear' }; }
+  };
+  window.saveGlobalTimeWindow = function (w) { try { localStorage.setItem('breedingTimeWindow', JSON.stringify(w)); } catch (e) { } };
+  window.isInGlobalWindow = function (dateObj) {
+    try {
+      if (!dateObj || isNaN(dateObj.getTime())) return false;
+      const win = window.getGlobalTimeWindow();
+      const t = dateObj.getTime();
+      if (!win || !win.type || win.type === 'thisYear') {
+        return dateObj.getFullYear() === new Date().getFullYear();
+      }
+      if (win.type === 'last12') {
+        const twelveAgo = new Date(); twelveAgo.setMonth(twelveAgo.getMonth() - 12);
+        return t >= twelveAgo.getTime() && t <= Date.now();
+      }
+      if (win.type === 'custom') {
+        try {
+          if (win.start) {
+            const s = new Date(win.start); if (isNaN(s)) return false; if (t < s.getTime()) return false;
+          }
+          if (win.end) {
+            const e = new Date(win.end); if (isNaN(e)) return false; const eEnd = e.getTime() + (24 * 60 * 60 * 1000 - 1); if (t > eEnd) return false;
+          }
+          return true;
+        } catch (e) { return false; }
+      }
+      return false;
+    } catch (e) { return false; }
+  };
+} catch (e) { }
+
+// Global helpers for the shared time window used by dashboard widgets
+try {
+  window.getGlobalTimeWindow = function () {
+    try {
+      const raw = localStorage.getItem('breedingTimeWindow');
+      if (!raw) return { type: 'thisYear' };
+      return JSON.parse(raw);
+    } catch (e) { return { type: 'thisYear' }; }
+  };
+  window.saveGlobalTimeWindow = function (w) { try { localStorage.setItem('breedingTimeWindow', JSON.stringify(w)); } catch (e) { } };
+  window.isInGlobalWindow = function (dateObj) {
+    try {
+      if (!dateObj || isNaN(dateObj.getTime())) return false;
+      const win = window.getGlobalTimeWindow();
+      const t = dateObj.getTime();
+      if (!win || !win.type || win.type === 'thisYear') {
+        return dateObj.getFullYear() === new Date().getFullYear();
+      }
+      if (win.type === 'last12') {
+        const twelveAgo = new Date(); twelveAgo.setMonth(twelveAgo.getMonth() - 12);
+        return t >= twelveAgo.getTime() && t <= Date.now();
+      }
+      if (win.type === 'custom') {
+        try {
+          if (win.start) {
+            const s = new Date(win.start); if (isNaN(s)) return false; if (t < s.getTime()) return false;
+          }
+          if (win.end) {
+            const e = new Date(win.end); if (isNaN(e)) return false; const eEnd = e.getTime() + (24 * 60 * 60 * 1000 - 1); if (t > eEnd) return false;
+          }
+          return true;
+        } catch (e) { return false; }
+      }
+      return false;
+    } catch (e) { return false; }
+  };
+} catch (e) { }
+
 // Render a small breeding summary widget on the dashboard.
 function renderBreedingSummary() {
   try {
@@ -4392,15 +4488,9 @@ function renderBreedingSummary() {
     const now = Date.now();
     const gd = getGestationDays() || 147;
 
-    // Time window handling: read saved window or default to thisYear
-    function getSavedWindow() {
-      try {
-        const raw = localStorage.getItem('breedingTimeWindow');
-        if (!raw) return { type: 'thisYear' };
-        return JSON.parse(raw);
-      } catch (e) { return { type: 'thisYear' }; }
-    }
-    function saveWindow(w) { try { localStorage.setItem('breedingTimeWindow', JSON.stringify(w)); } catch (e) { } }
+    // Time window handling: delegate to global helpers so all widgets follow same selection
+    function getSavedWindow() { try { return window.getGlobalTimeWindow ? window.getGlobalTimeWindow() : { type: 'thisYear' }; } catch (e) { return { type: 'thisYear' }; } }
+    function saveWindow(w) { try { if (window.saveGlobalTimeWindow) window.saveGlobalTimeWindow(w); else localStorage.setItem('breedingTimeWindow', JSON.stringify(w)); } catch (e) { } }
     const win = getSavedWindow();
 
     // UI elements (selector + custom inputs) - wire if present
@@ -4429,35 +4519,7 @@ function renderBreedingSummary() {
     } catch (e) { }
 
     // Helper: test whether a Date object falls inside the selected window
-    function inWindow(dateObj) {
-      if (!dateObj || isNaN(dateObj.getTime())) return false;
-      const t = dateObj.getTime();
-      if (!win || !win.type || win.type === 'thisYear') {
-        return dateObj.getFullYear() === new Date().getFullYear();
-      }
-      if (win.type === 'last12') {
-        const twelveAgo = new Date(); twelveAgo.setMonth(twelveAgo.getMonth() - 12);
-        return t >= twelveAgo.getTime() && t <= Date.now();
-      }
-      if (win.type === 'custom') {
-        try {
-          if (win.start) {
-            const s = new Date(win.start);
-            if (isNaN(s)) return false;
-            if (t < s.getTime()) return false;
-          }
-          if (win.end) {
-            const e = new Date(win.end);
-            if (isNaN(e)) return false;
-            // include the end date full day
-            const eEnd = e.getTime() + (24 * 60 * 60 * 1000 - 1);
-            if (t > eEnd) return false;
-          }
-          return true;
-        } catch (e) { return false; }
-      }
-      return false;
-    }
+    function inWindow(dateObj) { try { return window.isInGlobalWindow ? window.isInGlobalWindow(dateObj) : false; } catch (e) { return false; } }
 
     // Active ewes that are not lambs
     const ewes = (all || []).filter(s => {
@@ -4746,6 +4808,35 @@ function renderBreedingSummary() {
 
     // Build UI (use CSS classes and allow drag/drop ordering)
     container.innerHTML = '';
+    // Insert time/year selection controls above the summary
+    try {
+      const ctrl = document.createElement('div');
+      ctrl.id = 'breedingTimeControls';
+      ctrl.style.display = 'flex';
+      ctrl.style.alignItems = 'center';
+      ctrl.style.gap = '8px';
+      ctrl.style.marginBottom = '8px';
+      const sel = document.createElement('select'); sel.id = 'breedingTimeWindowSelect'; sel.style.padding = '6px';
+      sel.innerHTML = '<option value="thisYear">This year</option><option value="last12">Last 12 months</option><option value="custom">Custom range</option>';
+      const customWrap = document.createElement('div'); customWrap.id = 'breedingCustomRange'; customWrap.style.display = 'none'; customWrap.style.gap = '6px'; customWrap.style.alignItems = 'center';
+      const start = document.createElement('input'); start.type = 'date'; start.id = 'breedingCustomStart'; start.style.padding = '6px';
+      const end = document.createElement('input'); end.type = 'date'; end.id = 'breedingCustomEnd'; end.style.padding = '6px';
+      customWrap.appendChild(document.createTextNode('From:'));
+      customWrap.appendChild(start);
+      customWrap.appendChild(document.createTextNode('To:'));
+      customWrap.appendChild(end);
+      ctrl.appendChild(sel);
+      ctrl.appendChild(customWrap);
+      container.appendChild(ctrl);
+
+      // initialize values from saved window
+      try { sel.value = win.type || 'thisYear'; if (win.type === 'custom') customWrap.style.display = 'flex'; } catch (e) { }
+      try { if (win.start) start.value = win.start; if (win.end) end.value = win.end; } catch (e) { }
+
+      sel.addEventListener('change', (e) => { const v = e.target.value; try { if (v === 'custom') customWrap.style.display = 'flex'; else customWrap.style.display = 'none'; saveWindow(Object.assign({}, getSavedWindow(), { type: v })); } catch (er) { } try { renderBreedingSummary(); } catch (er) { } });
+      start.addEventListener('change', () => { try { const w = getSavedWindow(); w.start = start.value; saveWindow(w); renderBreedingSummary(); } catch (e) { } });
+      end.addEventListener('change', () => { try { const w = getSavedWindow(); w.end = end.value; saveWindow(w); renderBreedingSummary(); } catch (e) { } });
+    } catch (e) { }
     const wrapper = document.createElement('div');
     wrapper.className = 'breeding-wrapper';
     wrapper.id = 'breedingWrapper';
@@ -6472,20 +6563,58 @@ function renderBreedingSummary() {
                       const adjEndVal = (document.getElementById('fi_adjEnd') && document.getElementById('fi_adjEnd').value) ? document.getElementById('fi_adjEnd').value : '';
                       const adjStartDate = adjStartVal ? new Date(adjStartVal) : null;
                       const adjEndDate = adjEndVal ? new Date(adjEndVal) : null;
+                      function _sameDay(d1, d2) {
+                        try { const x = new Date(d1); const y = new Date(d2); return x && y && !isNaN(x.getTime()) && !isNaN(y.getTime()) && x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); } catch (e) { return false; }
+                      }
+                      function _birthWeightFor(l, birth) {
+                        try {
+                          // prefer explicit birthWeight variants
+                          let bw = parseFloat(l.birthWeight || l.birth_weight || l.birthWeightKg || l.birth_weight_kg || NaN);
+                          if (!isNaN(bw) && bw > 0) return bw;
+                          // otherwise use dated weight entries only if they match birth day
+                          if (Array.isArray(l.weights) && birth) {
+                            const vals = [];
+                            for (let i = 0; i < l.weights.length; i++) {
+                              try {
+                                const it = l.weights[i];
+                                const wt = (it && (it.weight !== undefined)) ? parseFloat(it.weight) : (it && (it.w !== undefined) ? parseFloat(it.w) : NaN);
+                                const dt = it && (it.date || it.d || it.weightDate || it.dateRecorded) ? (it.date || it.d || it.weightDate || it.dateRecorded) : null;
+                                if (!isNaN(wt) && wt > 0 && dt && _sameDay(dt, birth)) vals.push(wt);
+                              } catch (e) { }
+                            }
+                            if (vals.length) return vals.reduce((s, v) => s + v, 0) / vals.length;
+                          }
+                        } catch (e) { }
+                        return null;
+                      }
+
                       lambs.forEach(l => {
                         try {
                           const birthRaw = l.birthDate || l.birthdate || '';
                           const birth = birthRaw ? new Date(birthRaw) : null;
                           if (!birth || isNaN(birth)) return;
-                          const bW = parseFloat(l.birthWeight || l.birth_weight || l.weight || l.birth_weight_kg || 0) || 0;
+                          // If a date range is provided, restrict to lambs born within that window
+                          try {
+                            if ((adjStartDate || adjEndDate)) {
+                              if (adjStartDate && !isNaN(adjStartDate.getTime()) && birth.getTime() < adjStartDate.getTime()) return;
+                              if (adjEndDate && !isNaN(adjEndDate.getTime())) {
+                                const eEnd = adjEndDate.getTime() + (24 * 60 * 60 * 1000 - 1);
+                                if (birth.getTime() > eEnd) return;
+                              }
+                            }
+                          } catch (e) { }
+
+                          const bW = _birthWeightFor(l, birth) || 0;
                           // try to find a recorded wean/latest weight and date
                           const w = parseFloat(l.weaningWeight || l.weanWeight || l.weightAtWean || l.latestWeight || l.weight || 0) || 0;
                           const wDateRaw = l.weanDate || l.wean_date || l.latestWeightDate || l.weightDate || l.weight_date || '';
                           const wDate = wDateRaw ? new Date(wDateRaw) : null;
-                          // If a date range is specified, restrict to lambs with a recorded wean/weight date inside the range
+                          // If a date range is specified, restrict to lambs (by birth) above; additionally if a wean weight is required for adjusted wean we still need a weight date inside range
                           try {
-                            if ((adjStartDate || adjEndDate)) {
-                              if (!wDate || isNaN(wDate.getTime())) return;
+                            if ((adjStartDate || adjEndDate) && (!wDate || isNaN(wDate.getTime()))) {
+                              // allow lambs without wean weight if only birth-based listing was requested
+                            }
+                            if ((adjStartDate || adjEndDate) && wDate && !isNaN(wDate.getTime())) {
                               if (adjStartDate && !isNaN(adjStartDate.getTime()) && wDate.getTime() < adjStartDate.getTime()) return;
                               if (adjEndDate && !isNaN(adjEndDate.getTime())) {
                                 const eEnd = adjEndDate.getTime() + (24 * 60 * 60 * 1000 - 1);

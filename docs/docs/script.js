@@ -6525,9 +6525,11 @@ function renderBreedingSummary() {
                           const birthRaw = l.birthDate || l.birthdate || '';
                           const birth = birthRaw ? new Date(birthRaw) : null;
                           if (!birth || isNaN(birth)) return;
-                          // If a date range is provided, restrict to lambs born within that window
+                          // Prefer global window filtering; otherwise fall back to the local date inputs
                           try {
-                            if ((adjStartDate || adjEndDate)) {
+                            if (window && typeof window.isInGlobalWindow === 'function') {
+                              if (!window.isInGlobalWindow(birth)) return;
+                            } else if ((adjStartDate || adjEndDate)) {
                               if (adjStartDate && !isNaN(adjStartDate.getTime()) && birth.getTime() < adjStartDate.getTime()) return;
                               if (adjEndDate && !isNaN(adjEndDate.getTime())) {
                                 const eEnd = adjEndDate.getTime() + (24 * 60 * 60 * 1000 - 1);

@@ -6520,9 +6520,11 @@ function renderBreedingSummary() {
                       const startDefault = (win && win.start) ? win.start : '';
                       const endDefault = (win && win.end) ? win.end : '';
                       const stdAgeInput = `<label style="font-size:13px">Standard wean age (days): <select id="fi_stdWeanAge" style="width:100px;padding:4px;margin-left:6px"><option value="60">60</option><option value="90">90</option></select></label>`;
+                      const winType = (window.getGlobalTimeWindow ? (window.getGlobalTimeWindow().type || 'thisYear') : (win && win.type) ? win.type : 'thisYear');
+                      const winSelect = `<label style="font-size:13px;margin-right:8px">Window: <select id="fi_adjWindow" style="padding:4px;margin-left:6px"><option value="thisYear">Current year</option><option value="last12">Last 12 months</option><option value="custom">Custom range</option></select></label>`;
                       const dateRangeInputs = `<label style="font-size:13px;margin-left:12px">From: <input type="date" id="fi_adjStart" style="padding:4px;margin-left:6px" value="${startDefault}"/></label><label style="font-size:13px;margin-left:6px">To: <input type="date" id="fi_adjEnd" style="padding:4px;margin-left:6px" value="${endDefault}"/></label>`;
                       const recalcBtn = `<button id="fi_recalcAdj" class="button" style="margin-left:8px;padding:4px 8px">Recalc</button>`;
-                      let html = `<div style="font-weight:700;margin-bottom:6px">Lambs by adjusted weights</div><div style="margin-bottom:6px">${stdAgeInput}${dateRangeInputs}${recalcBtn}</div>`;
+                      let html = `<div style="font-weight:700;margin-bottom:6px">Lambs by adjusted weights</div><div style="margin-bottom:6px">${winSelect}${stdAgeInput}${dateRangeInputs}${recalcBtn}</div>`;
                       // gather lamb records
                       // only include currently active lambs (exclude sold/removed/dead)
                       const lambs = (all || []).filter(a => {
@@ -6649,6 +6651,43 @@ function renderBreedingSummary() {
                       const rec = document.getElementById('fi_recalcAdj');
                       const adjStartEl = document.getElementById('fi_adjStart');
                       const adjEndEl = document.getElementById('fi_adjEnd');
+                      const winSel = document.getElementById('fi_adjWindow');
+                      try {
+                        if (winSel) {
+                          try {
+                            const gw = (window.getGlobalTimeWindow ? window.getGlobalTimeWindow() : (typeof getSavedWindow === 'function' ? getSavedWindow() : { type: 'thisYear' }));
+                            winSel.value = gw.type || 'thisYear';
+                          } catch (e) { winSel.value = 'thisYear'; }
+                          const setCustomDisplay = () => {
+                            try {
+                              const adjStart = document.getElementById('fi_adjStart');
+                              const adjEnd = document.getElementById('fi_adjEnd');
+                              if (winSel.value === 'custom') {
+                                if (adjStart) adjStart.style.display = '';
+                                if (adjEnd) adjEnd.style.display = '';
+                              } else {
+                                if (adjStart) adjStart.style.display = 'none';
+                                if (adjEnd) adjEnd.style.display = 'none';
+                              }
+                            } catch (e) { }
+                          };
+                          setCustomDisplay();
+                          winSel.addEventListener('change', () => {
+                            try {
+                              const newW = (window.getGlobalTimeWindow ? window.getGlobalTimeWindow() : (typeof getSavedWindow === 'function' ? getSavedWindow() : { type: 'thisYear' }));
+                              newW.type = winSel.value;
+                              if (winSel.value === 'custom') {
+                                if (adjStartEl) newW.start = adjStartEl.value || '';
+                                if (adjEndEl) newW.end = adjEndEl.value || '';
+                              } else {
+                                try { delete newW.start; delete newW.end; } catch (e) { }
+                              }
+                              if (window.saveGlobalTimeWindow) window.saveGlobalTimeWindow(newW); else if (typeof saveWindow === 'function') saveWindow(newW);
+                            } catch (e) { }
+                            try { if (window.refreshDashboardWidgets) window.refreshDashboardWidgets(); else renderAdjustedWeights(); } catch (e) { try { renderAdjustedWeights(); } catch (e) { } }
+                          });
+                        }
+                      } catch (e) { }
                       try {
                         if (adjStartEl) {
                           adjStartEl.addEventListener('change', () => {

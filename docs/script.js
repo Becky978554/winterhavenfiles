@@ -6546,11 +6546,11 @@ function renderBreedingSummary() {
                       const adjStartDate = adjStartVal ? new Date(adjStartVal) : null;
                       const adjEndDate = adjEndVal ? new Date(adjEndVal) : null;
                       function _sameDay(d1, d2) {
-                          try { const x = new Date(d1); const y = new Date(d2); return x && y && !isNaN(x.getTime()) && !isNaN(y.getTime()) && x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); } catch (e) { return false; }
+                        try { const x = new Date(d1); const y = new Date(d2); return x && y && !isNaN(x.getTime()) && !isNaN(y.getTime()) && x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); } catch (e) { return false; }
                       }
-                        function _withinDays(d1, d2, days) {
-                          try { const x = new Date(d1); const y = new Date(d2); if (!x || !y || isNaN(x.getTime()) || isNaN(y.getTime())) return false; const diff = Math.abs(x.getTime() - y.getTime()); return diff <= (Math.max(1, parseInt(days, 10)) * 24 * 60 * 60 * 1000); } catch (e) { return false; }
-                        }
+                      function _withinDays(d1, d2, days) {
+                        try { const x = new Date(d1); const y = new Date(d2); if (!x || !y || isNaN(x.getTime()) || isNaN(y.getTime())) return false; const diff = Math.abs(x.getTime() - y.getTime()); return diff <= (Math.max(1, parseInt(days, 10)) * 24 * 60 * 60 * 1000); } catch (e) { return false; }
+                      }
                       function _birthWeightFor(l, birth) {
                         try {
                           let bw = parseFloat(l.birthWeight || l.birth_weight || l.birthWeightKg || l.birth_weight_kg || NaN);
@@ -6625,10 +6625,10 @@ function renderBreedingSummary() {
                             }
                           } catch (e) { }
 
-                          const bW = _birthWeightFor(l, birth) || 0;
+                          const bW = _birthWeightFor(l, birth);
                           // try to find a recorded wean/latest weight and date (only weights after birth)
                           const weanObj = _weanWeightFor(l, birth) || { w: null, date: '' };
-                          const w = (weanObj && weanObj.w) ? parseFloat(weanObj.w) : 0;
+                          const w = (weanObj && weanObj.w != null && weanObj.w !== '') ? parseFloat(weanObj.w) : null;
                           const wDateRaw = (weanObj && weanObj.date) ? weanObj.date : '';
                           const wDate = wDateRaw ? new Date(wDateRaw) : null;
                           // If a date range is specified, restrict to lambs (by birth) above; additionally if a wean weight is required for adjusted wean we still need a weight date inside range
@@ -6674,7 +6674,7 @@ function renderBreedingSummary() {
                             adjBirth = Math.round((bW * factor) * 100) / 100;
                           }
 
-                          rows.push({ id: l.id || l.name || '', name: l.name || l.tag || l.id || '', dam: l.dam || '', birthDate: birthRaw, birthW: bW || null, adjBirth: adjBirth, weanW: w || null, weanDate: wDateRaw || null, ageDays: ageDays, adjWean: adjWean });
+                          rows.push({ id: l.id || l.name || '', name: l.name || l.tag || l.id || '', dam: l.dam || '', birthDate: birthRaw, birthW: (bW !== null && bW !== undefined) ? bW : null, adjBirth: adjBirth, weanW: (w !== null && w !== undefined) ? w : null, weanDate: wDateRaw || null, ageDays: ageDays, adjWean: adjWean });
                         } catch (e) { }
                       });
                       // sort by adjusted wean weight descending (fallback to adjusted birth)

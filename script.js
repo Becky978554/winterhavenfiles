@@ -4703,12 +4703,43 @@ function renderBreedingSummary() {
         if (!bdRaw) return;
         const bd = new Date(bdRaw);
         if (isNaN(bd) || bd.getFullYear() !== currentYear) return;
-        // determine approximate weight fields
-        const w = parseFloat(a.birthWeight || a.birthWeightKg || a.weight || a.birth_weight || a.birth_weight_kg || NaN);
-        if (!isNaN(w) && w > 0) {
-          totalBirthWeight += w;
-          birthWeightCount++;
-        }
+        // determine birth weight: prefer explicit birthWeight fields, otherwise use any dated weight recorded on the birth day
+        (function () {
+          function sameDay(d1, d2) {
+            try {
+              var x = new Date(d1), y = new Date(d2);
+              return x && y && !isNaN(x.getTime()) && !isNaN(y.getTime()) && x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
+            } catch (e) { return false; }
+          }
+
+          var bw = NaN;
+          // explicit birth weight fields (legacy and variants)
+          bw = parseFloat(a.birthWeight || a.birth_weight || a.birthWeightKg || a.birth_weight_kg || NaN);
+          if (isNaN(bw) || bw <= 0) {
+            // check dated weights array for entries on the birth date
+            try {
+              var arr = Array.isArray(a.weights) ? a.weights : [];
+              var vals = [];
+              for (var i = 0; i < arr.length; i++) {
+                try {
+                  var it = arr[i];
+                  var wt = (it && (it.weight !== undefined)) ? parseFloat(it.weight) : (it && (it.w !== undefined) ? parseFloat(it.w) : NaN);
+                  var dt = it && (it.date || it.d || it.weightDate || it.dateRecorded) ? (it.date || it.d || it.weightDate || it.dateRecorded) : null;
+                  if (!isNaN(wt) && wt > 0 && dt && sameDay(dt, bd)) vals.push(wt);
+                } catch (e) { }
+              }
+              if (vals.length) {
+                // average multiple same-day entries if present
+                var s = 0; for (var j = 0; j < vals.length; j++) s += vals[j]; bw = s / vals.length;
+              }
+            } catch (e) { bw = NaN; }
+          }
+
+          if (!isNaN(bw) && bw > 0) {
+            totalBirthWeight += bw;
+            birthWeightCount++;
+          }
+        })();
       } catch (e) { }
     });
     const avgBirthWeight = birthWeightCount ? (totalBirthWeight / birthWeightCount) : null;

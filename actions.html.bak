@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Actions — Sheep Management</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Lightweight polyfill for crypto.randomUUID for older browsers/contexts.
+    (function () {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+          crypto.randomUUID = function () {
+            try {
+              const getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+                ? (arr => crypto.getRandomValues(arr))
+                : (arr => { for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; });
+              const arr = new Uint8Array(16);
+              getRandom(arr);
+              arr[6] = (arr[6] & 0x0f) | 0x40;
+              arr[8] = (arr[8] & 0x3f) | 0x80;
+              const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+              return `${hex.substr(0, 8)}-${hex.substr(8, 4)}-${hex.substr(12, 4)}-${hex.substr(16, 4)}-${hex.substr(20, 12)}`;
+            } catch (e) {
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { const r = Math.random() * 16 | 0; const v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+            }
+          };
+        }
+      } catch (e) { }
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <a href="index.html" class="back">← Back</a>
+    <h1>Actions</h1>
+
+
+
+    <!-- Top action bar: split into two rows for clarity -->
+    <div id="topActionBar" class="top-action-bar">
+      <div class="top-action-row" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <button id="actAddSheep" class="button">+ Add New Sheep</button>
+        <button id="actAddToEwes" class="button">+ Add to Active Ewes</button>
+        <button id="actAddToRams" class="button">+ Add to Active Rams</button>
+        <button id="actRecordLambing" class="button">+ Record Lambing</button>
+        <button id="actRecordBreeding" class="button">+ Record Breeding</button>
+        <button id="actBulkEditColumns" class="button">Bulk Edit Columns</button>
+        <button id="actPromoteLambs" class="button">Promote Selected Lambs</button>
+        <button id="topEditColumnsBtn" class="button">Edit Columns</button>
+      </div>
+      <div class="top-action-row" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="actMarkCulled" class="button">Mark Culled</button>
+        <button id="actMarkToBeCulled" class="button">Mark To Be Culled</button>
+        <button id="actMarkSold" class="button">Mark Sold</button>
+        <button id="actArchive" class="button">Archive</button>
+        <button id="actSettings" class="button">Settings</button>
+        <button id="downloadMasterCsv" class="button">Download Master CSV</button>
+        <button id="dedupeSheepBtn" class="button">Download Master CSV (deduped)</button>
+        <a class="button" href="users.html" data-role="admin">User Management</a>
+      </div>
+    </div>
+
+    <!-- Weight Date Modal -->
+    <div id="weightDateModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="weightDateClose">&times;</span>
+        <h2>Choose Weight Date</h2>
+        <div style="margin-top:8px;">
+          <label for="weightDateInputModal">Weight date:</label>
+          <input id="weightDateInputModal" type="date" class="form-input" style="margin-left:8px;" />
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button id="weightDateCancel" class="button-cancel">Cancel</button>
+          <button id="weightDateConfirm" class="button-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary: Your Animals -->
+    <section id="actionsSummary" class="summary-row">
+      <div class="summary-card tab-button" data-tab="active-ewes" role="tab">
+        <div class="label">Active Ewes</div>
+        <div id="count-active-ewes" class="count">0</div>
+      </div>
+      <div class="summary-card tab-button" data-tab="active-rams" role="tab">
+        <div class="label">Active Rams</div>
+        <div id="count-active-rams" class="count">0</div>
+      </div>
+      <div class="summary-card tab-button" data-tab="current-lambs" role="tab">
+        <div class="label">Current Lambs</div>
+        <div id="count-current-lambs" class="count">0</div>
+      </div>
+      <!-- Lamb age control removed from summary row; it will appear beside search when Current Lambs selected -->
+      <div class="summary-card tab-button" data-tab="culled" role="tab">
+        <div class="label">Culled</div>
+        <div id="count-culled" class="count">0</div>
+      </div>
+      <div class="summary-card tab-button" data-tab="to-be-culled" role="tab">
+        <div class="label">To Be Culled</div>
+        <div id="count-to-be-culled" class="count">0</div>
+      </div>
+      <div class="summary-card tab-button" data-tab="sold" role="tab">
+        <div class="label">Sold</div>
+        <div id="count-sold" class="count">0</div>
+      </div>
+      <div class="summary-card tab-button" data-tab="archived" role="tab">
+        <div class="label">Archived</div>
+        <div id="count-archived" class="count">0</div>
+      </div>
+      <div class="summary-card tab-button" data-tab="all" role="tab">
+        <div class="label">All</div>
+        <div id="count-all" class="count">0</div>
+      </div>
+    </section>
+
+    <div id="actionsTableContainer" class="actions-table-container">
+      <div id="actionsTableControls" class="actions-table-controls">
+        <button id="showAllBtn" class="button">Show All</button>
+        <input id="actionsSearch" class="actions-search form-input" placeholder="Search name or id" />
+        <div id="lambAgeControlHolder"
+          style="display:none; margin-left:8px; display:flex; gap:6px; align-items:center;">
+          <label style="font-size:13px; margin:0;">Lamb threshold (months)</label>
+          <input id="lambAgeMonthsInput" type="number" min="0" value="8" style="width:64px;padding:6px;" />
+          <button id="applyLambAgeBtn" class="button">Apply</button>
+        </div>
+        <div class="actions-controls-right">
+          <button id="selectAllVisible" class="button">Select All</button>
+          <button id="clearSelection" class="button">Clear Selection</button>
+          <button id="editColumnsBtn" class="button">Edit Columns</button>
+          <button id="saveColumnsBtn" class="button" style="display:none;">Save Changes</button>
+          <span id="selectedCount" style="margin-left:8px;color:#333;font-weight:600;">0 selected</span>
+        </div>
+      </div>
+      <div id="actionsTable"></div>
+    </div>
+
+    <!-- Columns settings modal -->
+    <div id="columnsSettingsModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="columnsSettingsClose">&times;</span>
+        <h2>Actions Table Columns</h2>
+        <div style="margin-top:8px;">
+          <label for="columnsTabSelect">Configure columns for tab:</label>
+          <select id="columnsTabSelect" class="form-input" style="margin-top:6px;">
+            <option value="all">All</option>
+            <option value="active-ewes">Active Ewes</option>
+            <option value="active-rams">Active Rams</option>
+            <option value="current-lambs">Current Lambs</option>
+            <option value="culled">Culled</option>
+            <option value="to-be-culled">To Be Culled</option>
+            <option value="sold">Sold</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_name" /> Name</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_name">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_tagType" /> Tag Type</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_tagType">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_id" /> ID</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_id">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_breed" /> Breed</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_breed">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_color" /> Colour</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_color">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_sire" /> Sire</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_sire">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_dam" /> Dam</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_dam">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_sireSire" /> Sire's Sire</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_sireSire">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_notes" /> Notes</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_notes">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_age" /> Age</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_age">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_weight" /> Weight</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_weight">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_sex" /> Sex</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_sex">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_status" /> Status</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_status">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_pastLambing" /> Past Lambing</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_pastLambing">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_lastLambingDate" /> Last Lambing
+              Date</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_lastLambingDate">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_bredDate" /> Last Bred Date</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_bredDate">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_daysUntil" /> Days Until</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_daysUntil">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_daysPost" /> Days Post Lambing</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_daysPost">Off</span></div>
+          </div>
+          <div class="col-checkbox-row"><label><input type="checkbox" id="col_expectedDueDate" /> Expected Due
+              Date</label>
+            <div class="checkbox-badge"><span class="badge" id="badge_col_expectedDueDate">Off</span></div>
+          </div>
+          <!-- Actions column is always shown and not configurable via settings -->
+        </div>
+        <div id="columnsSavedIndicator" class="saved-indicator" style="display:none;">Saved</div>
+        <div class="modal-buttons">
+          <button id="columnsSaveBtn" class="button-primary">Save</button>
+          <button id="columnsCancelBtn" class="button-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-sep">
+
+    <!-- Reuse the modals so script.js modal helpers work on this page -->
+    <!-- Add New Sheep modal -->
+    <div id="sheepModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>Add New Sheep</h2>
+        <form id="sheepForm">
+          <label for="sheepName">Name / Ear Tag:</label>
+          <input type="text" id="sheepName" required>
+
+          <label for="sheepBreed">Breed:</label>
+          <input type="text" id="sheepBreed" placeholder="e.g., Katahdin">
+
+          <label for="sheepColor">Colour:</label>
+          <select id="sheepColor">
+            <option value="">Unknown</option>
+            <option value="__other__">Other — enter...</option>
+            <option>Black with Brown and White</option>
+            <option>Chocolate Brown</option>
+            <option>Light Brown</option>
+            <option>Med Brown</option>
+            <option>Red</option>
+            <option>Red and White</option>
+            <option>White</option>
+            <option>White Speckled Black</option>
+            <option>White Speckled Brown</option>
+            <option>Black</option>
+            <option>Black and White</option>
+            <option>Brown and White</option>
+            <option>Brown Speckled White</option>
+            <option>Tan</option>
+            <option>White Darkening</option>
+            <option>White Speckled Red</option>
+          </select>
+          <input type="text" id="sheepColorOther" placeholder="Enter custom colour"
+            style="display:none;margin-top:6px;">
+
+          <label for="sheepTagType">Tag Type:</label>
+          <select id="sheepTagType">
+            <option value="">Unknown</option>
+            <option value="Square">Square</option>
+            <option value="Long">Long</option>
+            <option value="Custom">Custom</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label for="sheepSex">Sex:</label>
+          <select id="sheepSex">
+            <option value="Unknown">Unknown</option>
+            <option value="Ewe">Ewe</option>
+            <option value="Ram">Ram</option>
+          </select>
+
+          <label for="sheepStatus">Status:</label>
+          <select id="sheepStatus">
+            <option value="active">Active</option>
+            <option value="to-be-culled">To Be Culled</option>
+            <option value="culled">Culled</option>
+            <option value="sold">Sold</option>
+            <option value="archived">Archived</option>
+          </select>
+
+          <label for="sheepAge">Age:</label>
+          <input type="text" id="sheepAge" placeholder="e.g., 2 years">
+
+          <label for="sheepWeight">Weight (lbs):</label>
+          <input type="number" id="sheepWeight" placeholder="130">
+
+          <label for="sheepBirthDate">Birth Date:</label>
+          <input type="date" id="sheepBirthDate">
+
+          <label for="sheepNotes">Notes:</label>
+          <textarea id="sheepNotes" placeholder="Healthy, lambed twice..."></textarea>
+
+          <div class="modal-buttons">
+            <button type="submit" class="button-primary">Save Sheep</button>
+            <button type="button" class="button-cancel" id="cancelBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lambing modal -->
+    <div id="lambingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="lambingClose">&times;</span>
+        <h2>Record Lambing</h2>
+        <div class="form-row">
+          <label for="lambingCount"><strong>Number of lambs:</strong></label>
+          <select id="lambingCount" class="form-input">
+            <option value="1">Single (1)</option>
+            <option value="2">Twin (2)</option>
+            <option value="3">Triplet (3)</option>
+            <option value="other">Other (4+)</option>
+          </select>
+          <input type="number" id="lambingCountOther" min="4" placeholder="Enter number (4+)"
+            class="form-input conditional-hidden" />
+        </div>
+
+        <div class="form-row">
+          <label for="lambingDate"><strong>Birth Date:</strong></label>
+          <input type="date" id="lambingDate" class="form-input" />
+        </div>
+
+        <div class="form-row">
+          <label for="lambingMother"><strong>Mother (Ewe):</strong></label>
+          <select id="lambingMother" class="form-input full-width"></select>
+        </div>
+
+        <div class="form-row">
+          <label for="lambingSire"><strong>Father (Ram) — optional:</strong></label>
+          <select id="lambingSire" class="form-input full-width"></select>
+        </div>
+
+        <div id="lambChildrenContainer" class="form-row"></div>
+
+        <div class="form-actions">
+          <button id="lambingCancel" class="button-cancel">Cancel</button>
+          <button id="lambingConfirmBtn" class="button-primary">Record Lambing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breeding modal -->
+    <div id="breedingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="breedingClose">&times;</span>
+        <h2 id="breedingModalTitle">Record Breeding</h2>
+        <div class="form-row">
+          <label for="breedingSire"><strong>Select Sire (Ram):</strong></label>
+          <select id="breedingSire" class="form-input full-width"></select>
+        </div>
+        <div class="form-row">
+          <label for="breedingDate"><strong>Bred Date:</strong></label>
+          <input type="date" id="breedingDate" class="form-input">
+        </div>
+        <div id="breedingTargets" class="form-row muted"></div>
+        <div class="form-actions">
+          <button id="breedingCancel" class="button-cancel">Cancel</button>
+          <button id="breedingConfirmBtn" class="button-primary">Apply Breeding</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sale Modal (shared) -->
+    <div id="saleModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="saleModalClose">&times;</span>
+        <h2>Record Sale</h2>
+        <div style="margin-top:8px;">
+          <div style="margin-bottom:8px;">
+            <label><input type="radio" name="saleMode" value="bulk" checked> Bulk sale (one total price)</label>
+            <label style="margin-left:12px;"><input type="radio" name="saleMode" value="per"> Per-animal prices</label>
+          </div>
+          <div id="saleBulkRow" style="margin-bottom:8px;">
+            <label for="saleBulkPrice"><strong>Total sale amount:</strong></label>
+            <input id="saleBulkPrice" type="text" placeholder="e.g. 1200" style="margin-left:8px;padding:6px;" />
+          </div>
+          <div id="salePerAnimalRow" style="margin-bottom:8px; display:none;">
+            <div id="salePerAnimalContainer"
+              style="max-height:220px; overflow:auto; border:1px solid #eee; padding:6px; background:#fff;"></div>
+          </div>
+          <div style="margin-bottom:8px;color:#555;"><strong>Selected animals:</strong> <span
+              id="saleSelectedList"></span></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button id="saleCancelBtn" class="button-cancel">Cancel</button>
+          <button id="saleConfirmBtn" class="button-primary">Confirm Sale</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ID Picker Modal (used instead of prompt fallback) -->
+    <div id="idPickerModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="idPickerClose">&times;</span>
+        <h2>Enter Sheep IDs</h2>
+        <div style="margin-top:8px;">
+          <label for="idPickerInput">Sheep IDs (comma-separated):</label>
+          <input id="idPickerInput" class="form-input" placeholder="e.g. A12, B34, C56"
+            style="width:100%;margin-top:6px;" />
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button id="idPickerCancel" class="button-cancel">Cancel</button>
+          <button id="idPickerConfirm" class="button-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Edit Modal -->
+    <div id="bulkEditModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="bulkEditClose">&times;</span>
+        <h2>Bulk Edit Columns</h2>
+        <p style="color:#555;">Select which fields to update and enter new values. Leave a field empty to skip it.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label><input type="checkbox" id="be_name_chk"> Update Name</label>
+          <input id="be_name" class="form-input" placeholder="New name (applied to each selected sheep)" />
+
+          <label><input type="checkbox" id="be_weight_chk"> Update Weight (lbs)</label>
+          <input id="be_weight" type="number" min="0" class="form-input" placeholder="e.g. 130" />
+
+          <label><input type="checkbox" id="be_notes_chk"> Update Notes</label>
+          <textarea id="be_notes" class="form-input" placeholder="Notes to set"></textarea>
+
+          <label><input type="checkbox" id="be_sex_chk"> Update Sex</label>
+          <select id="be_sex" class="form-input">
+            <option value="">(no change)</option>
+            <option value="Ewe">Ewe</option>
+            <option value="Ram">Ram</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+
+          <label><input type="checkbox" id="be_tagType_chk"> Update Tag Type</label>
+          <select id="be_tag_type" class="form-input">
+            <option value="">(no change)</option>
+          </select>
+
+          <label><input type="checkbox" id="be_colour_chk"> Update Colour</label>
+          <select id="be_colour" class="form-input">
+            <option value="">(no change)</option>
+            <option>Black</option>
+            <option>Black and White</option>
+            <option>Brown and White</option>
+            <option>White</option>
+            <option>Red</option>
+            <option>Other</option>
+          </select>
+
+          <label><input type="checkbox" id="be_bred_chk"> Update Last Bred Date</label>
+          <input id="be_bred" type="date" class="form-input" />
+
+          <div style="display:flex;gap:8px;justify-content:flex-end; margin-top:8px;">
+            <button id="bulkEditCancel" class="button-cancel">Cancel</button>
+            <button id="bulkEditApply" class="button-primary">Apply to Selected</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Wire action buttons to show modals or perform simple status updates
+    window.addEventListener('DOMContentLoaded', () => {
+      const addBtn = document.getElementById('actAddSheep');
+      const lambingBtn = document.getElementById('actRecordLambing');
+      const breedingBtn = document.getElementById('actRecordBreeding');
+      const culledBtn = document.getElementById('actMarkCulled');
+      const tbcBtn = document.getElementById('actMarkToBeCulled');
+      const soldBtn = document.getElementById('actMarkSold');
+      const archiveBtn = document.getElementById('actArchive');
+
+      if (addBtn) addBtn.addEventListener('click', () => {
+        const modal = document.getElementById('sheepModal'); if (modal) {
+          modal.style.display = 'block';
+          try { const n = document.getElementById('sheepName'); if (n) n.focus(); } catch (e) { }
+        }
+      });
+
+      // Add-to-active shortcuts: open Add New Sheep modal and preselect sex/status
+      const addToEwes = document.getElementById('actAddToEwes');
+      const addToRams = document.getElementById('actAddToRams');
+      if (addToEwes) addToEwes.addEventListener('click', () => {
+        // If rows are selected, restore them to active (do not open Add modal)
+        try {
+          const sel = Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).map(cb => cb.dataset.id).filter(Boolean);
+          if (sel && sel.length) {
+            // Use performMarkStatus helper to set status to 'active'
+            try { performMarkStatus(sel, 'active'); } catch (e) {
+              // fallback: apply directly
+              sel.forEach(id => {
+                try {
+                  const raw = localStorage.getItem('sheep-' + id);
+                  const s = raw ? JSON.parse(raw) : { id };
+                  s.status = 'active';
+                  try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                } catch (err) { }
+              });
+              try { loadSheepList(); } catch (e) { }
+            }
+            alert(`Restored ${sel.length} selected animal(s) to active.`);
+            return;
+          }
+        } catch (e) { }
+        // No selection: fall back to opening Add modal (preselect Ewe)
+        const modal = document.getElementById('sheepModal');
+        if (!modal) return alert('Add UI not available');
+        try { if (typeof setTab === 'function') setTab('active-ewes'); } catch (e) { }
+        modal.style.display = 'block';
+        try { document.getElementById('sheepSex').value = 'Ewe'; } catch (e) { }
+        try { document.getElementById('sheepStatus').value = 'active'; } catch (e) { }
+        try { const n = document.getElementById('sheepName'); if (n) n.focus(); } catch (e) { }
+      });
+      if (addToRams) addToRams.addEventListener('click', () => {
+        // If rows are selected, restore them to active (do not open Add modal)
+        try {
+          const sel = Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).map(cb => cb.dataset.id).filter(Boolean);
+          if (sel && sel.length) {
+            try { performMarkStatus(sel, 'active'); } catch (e) {
+              sel.forEach(id => {
+                try {
+                  const raw = localStorage.getItem('sheep-' + id);
+                  const s = raw ? JSON.parse(raw) : { id };
+                  s.status = 'active';
+                  try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                } catch (err) { }
+              });
+              try { loadSheepList(); } catch (e) { }
+            }
+            alert(`Restored ${sel.length} selected animal(s) to active.`);
+            return;
+          }
+        } catch (e) { }
+        // No selection: fall back to opening Add modal (preselect Ram)
+        const modal = document.getElementById('sheepModal');
+        if (!modal) return alert('Add UI not available');
+        try { if (typeof setTab === 'function') setTab('active-rams'); } catch (e) { }
+        modal.style.display = 'block';
+        try { document.getElementById('sheepSex').value = 'Ram'; } catch (e) { }
+        try { document.getElementById('sheepStatus').value = 'active'; } catch (e) { }
+        try { const n = document.getElementById('sheepName'); if (n) n.focus(); } catch (e) { }
+      });
+
+      if (lambingBtn) lambingBtn.addEventListener('click', () => {
+        // open lambing modal and populate selects via existing helper
+        try { openLambingModal(); } catch (e) { const m = document.getElementById('lambingModal'); if (m) m.style.display = 'block'; }
+      });
+
+      if (breedingBtn) breedingBtn.addEventListener('click', () => {
+        try { openBreedingModal(); } catch (e) { const m = document.getElementById('breedingModal'); if (m) m.style.display = 'block'; }
+      });
+
+      // pendingMarkStatus is used when the user must enter IDs via the ID picker modal
+      let pendingMarkStatus = null;
+
+      function performMarkStatus(arr, status) {
+        if (!arr || !arr.length) return;
+        let master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+
+        if (status === 'sold') {
+          try {
+            if (typeof openSaleModal === 'function') {
+              openSaleModal(arr);
+              return;
+            }
+          } catch (e) { console.warn('openSaleModal failed', e); }
+        }
+
+        arr.forEach(id => {
+          try {
+            const raw = localStorage.getItem('sheep-' + id);
+            let s = raw ? JSON.parse(raw) : { id };
+            try { applySheepStatus(s, status); } catch (e) { s.status = status; }
+            try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+            const idx = master.findIndex(x => x && x.id === id);
+            if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s);
+            else master.push(s);
+          } catch (e) { console.warn(e); }
+        });
+        localStorage.setItem('sheepList', JSON.stringify(master));
+        try { if (typeof computeCounts === 'function') computeCounts(); } catch (e) { }
+        try { if (typeof buildTable === 'function') buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+        alert('Marked ' + arr.length + ' sheep as ' + status + '.');
+      }
+
+      const markStatus = (status) => {
+        // Prefer selected rows in the table for bulk operations. If none selected,
+        // show the ID picker modal (replaces legacy prompt()).
+        let arr = Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).map(cb => cb.dataset.id).filter(Boolean);
+        if (!arr || !arr.length) {
+          // show modal to collect comma-separated IDs
+          pendingMarkStatus = status;
+          const modal = document.getElementById('idPickerModal');
+          const input = document.getElementById('idPickerInput');
+          if (modal) {
+            if (input) input.value = '';
+            modal.style.display = 'block';
+            try { if (input) input.focus(); } catch (e) { }
+            return;
+          }
+          // If the ID picker modal is not available, abort and instruct user
+          alert('No sheep selected and ID picker is not available. Please select rows.');
+          return;
+        }
+
+        performMarkStatus(arr, status);
+      };
+
+      if (culledBtn) culledBtn.addEventListener('click', () => markStatus('culled'));
+      if (tbcBtn) tbcBtn.addEventListener('click', () => markStatus('to-be-culled'));
+      if (soldBtn) soldBtn.addEventListener('click', () => markStatus('sold'));
+      if (archiveBtn) archiveBtn.addEventListener('click', () => {
+        try {
+          // If any rows are selected, prefer bulk operation using the UI selection
+          const selected = document.querySelectorAll('#actionsTable .row-checkbox:checked');
+          if (selected && selected.length) {
+            // call bulk handler if available, otherwise replicate behavior
+            if (typeof markSelected === 'function') {
+              markSelected('archived');
+              return;
+            } else if (typeof window.markSelected === 'function') {
+              window.markSelected('archived');
+              return;
+            } else {
+              // fallback: perform same operation inline
+              const ids = Array.from(selected).map(cb => cb.dataset.id).filter(Boolean);
+              if (!ids.length) return alert('No sheep selected');
+              if (!confirm(`Mark ${ids.length} selected sheep as archived?`)) return;
+              let master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+              ids.forEach(id => {
+                try {
+                  const raw = localStorage.getItem('sheep-' + id);
+                  let s = raw ? JSON.parse(raw) : { id };
+                  s.status = 'archived';
+                  try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                  const idx = master.findIndex(x => x && x.id === id);
+                  if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s);
+                  else master.push(s);
+                } catch (e) { console.warn(e); }
+              });
+              localStorage.setItem('sheepList', JSON.stringify(master));
+              try { computeCounts(); } catch (e) { }
+              try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+              alert(`Marked ${ids.length} sheep as archived.`);
+              return;
+            }
+          }
+        } catch (e) { console.warn(e); }
+        // no selected rows — fall back to prompt-based flow
+        try { markStatus('archived'); } catch (e) { console.warn(e); }
+      });
+
+      // wire modal close handlers inside this page
+      document.querySelectorAll('.modal .modal-close').forEach(el => el.addEventListener('click', (e) => { e.target.closest('.modal').style.display = 'none'; }));
+      document.getElementById('cancelBtn') && document.getElementById('cancelBtn').addEventListener('click', () => { document.getElementById('sheepModal').style.display = 'none'; });
+      document.getElementById('lambingCancel') && document.getElementById('lambingCancel').addEventListener('click', () => { document.getElementById('lambingModal').style.display = 'none'; });
+      document.getElementById('breedingCancel') && document.getElementById('breedingCancel').addEventListener('click', () => { document.getElementById('breedingModal').style.display = 'none'; });
+
+      // ID picker modal confirm/cancel wiring (replaces prompt fallback)
+      try {
+        const idPickerModalEl = document.getElementById('idPickerModal');
+        const idPickerConfirm = document.getElementById('idPickerConfirm');
+        const idPickerCancel = document.getElementById('idPickerCancel');
+        const idPickerInput = document.getElementById('idPickerInput');
+        if (idPickerConfirm) idPickerConfirm.addEventListener('click', () => {
+          try {
+            const raw = (idPickerInput && idPickerInput.value) ? idPickerInput.value : '';
+            if (!raw) { alert('No IDs entered'); return; }
+            const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
+            if (!arr.length) { alert('No valid IDs entered'); return; }
+            const status = pendingMarkStatus || null;
+            pendingMarkStatus = null;
+            if (idPickerModalEl) idPickerModalEl.style.display = 'none';
+            if (status) performMarkStatus(arr, status);
+          } catch (e) { console.warn('idPickerConfirm handler failed', e); }
+        });
+        if (idPickerCancel) idPickerCancel.addEventListener('click', () => { try { pendingMarkStatus = null; if (idPickerModalEl) idPickerModalEl.style.display = 'none'; } catch (e) { } });
+      } catch (e) { }
+
+      // Weight date modal helper: show modal and callback with selected ISO date or null
+      try {
+        const weightModal = document.getElementById('weightDateModal');
+        const weightInp = document.getElementById('weightDateInputModal');
+        const weightConfirm = document.getElementById('weightDateConfirm');
+        const weightCancel = document.getElementById('weightDateCancel');
+        const weightClose = document.getElementById('weightDateClose');
+        window._pendingWeightDateCallback = null;
+        function askWeightDateModal(defaultIso, cb) {
+          try {
+            if (!weightModal || !weightInp) return cb ? cb(null) : null;
+            window._pendingWeightDateCallback = typeof cb === 'function' ? cb : null;
+            weightInp.value = defaultIso || new Date().toISOString().slice(0, 10);
+            weightModal.style.display = 'block';
+            try { weightInp.focus(); } catch (e) { }
+          } catch (e) { if (cb) cb(null); }
+        }
+        if (weightConfirm) weightConfirm.addEventListener('click', () => {
+          try {
+            const v = weightInp && weightInp.value ? weightInp.value : null;
+            if (weightModal) weightModal.style.display = 'none';
+            const cb = window._pendingWeightDateCallback; window._pendingWeightDateCallback = null;
+            if (cb) cb(v);
+          } catch (e) { const cb = window._pendingWeightDateCallback; window._pendingWeightDateCallback = null; if (cb) cb(null); }
+        });
+        if (weightCancel) weightCancel.addEventListener('click', () => { try { if (weightModal) weightModal.style.display = 'none'; const cb = window._pendingWeightDateCallback; window._pendingWeightDateCallback = null; if (cb) cb(null); } catch (e) { } });
+        if (weightClose) weightClose.addEventListener('click', () => { try { if (weightModal) weightModal.style.display = 'none'; const cb = window._pendingWeightDateCallback; window._pendingWeightDateCallback = null; if (cb) cb(null); } catch (e) { } });
+        try { window.askWeightDateModal = askWeightDateModal; } catch (e) { }
+      } catch (e) { }
+
+      // NOTE: Submit handler for Add Sheep is wired centrally in `script.js` (initIndex()).
+    });
+    // end of DOMContentLoaded wiring for actions
+    // Additional UI: render summary counts and a table for quick actions
+    window.addEventListener('DOMContentLoaded', () => {
+      const summaryCards = Array.from(document.querySelectorAll('#actionsSummary .summary-card'));
+      const counts = {
+        'active-ewes': document.getElementById('count-active-ewes'),
+        'active-rams': document.getElementById('count-active-rams'),
+        'current-lambs': document.getElementById('count-current-lambs'),
+        'culled': document.getElementById('count-culled'),
+        'to-be-culled': document.getElementById('count-to-be-culled'),
+        'sold': document.getElementById('count-sold'),
+        'archived': document.getElementById('count-archived'),
+        'all': document.getElementById('count-all')
+      };
+
+      // initialize active filter from URL `tab` param when present (so returning links work)
+      let activeFilter = 'all';
+      try {
+        const paramsLocal = new URLSearchParams(window.location.search);
+        const t = paramsLocal.get('tab');
+        if (t) activeFilter = t;
+        try { if (typeof toggleLambAgeHolderVisibility === 'function') toggleLambAgeHolderVisibility(); } catch (e) { }
+      } catch (e) { }
+
+      function computeCounts() {
+        const all = getAllSheep() || [];
+        // Treat "All" as active animals only (exclude sold/culled/archived)
+        const total = all.filter(s => { try { const st = String((s && s.status) || '').trim().toLowerCase(); return !['sold', 'culled', 'archived'].includes(st); } catch (e) { return true; } }).length;
+        const c = {
+          'active-ewes': all.filter(s => matchesTab(s, 'active-ewes')).length,
+          'active-rams': all.filter(s => matchesTab(s, 'active-rams')).length,
+          'current-lambs': all.filter(s => matchesTab(s, 'current-lambs')).length,
+          'culled': all.filter(s => matchesTab(s, 'culled')).length,
+          'to-be-culled': all.filter(s => matchesTab(s, 'to-be-culled')).length,
+          'sold': all.filter(s => matchesTab(s, 'sold')).length,
+          'archived': all.filter(s => matchesTab(s, 'archived')).length,
+          'all': total
+        };
+        Object.keys(c).forEach(k => { try { if (counts[k]) counts[k].textContent = c[k]; } catch (e) { } });
+      }
+
+      function buildTable(filter, search) {
+        const all = getAllSheep() || [];
+        let rows = all.filter(s => {
+          try {
+            if (!filter) return true;
+            if (filter === 'all') {
+              try { const st = String((s && s.status) || '').trim().toLowerCase(); return !['sold', 'culled', 'archived'].includes(st); } catch (e) { return true; }
+            }
+            return matchesTab(s, filter);
+          } catch (e) { return true; }
+        });
+        try { console.info(`[Actions] buildTable filter=${filter} -> ${rows.length} rows before search`); } catch (e) { }
+        // Additional debug: when viewing active-ewes or active-rams, log samples to diagnose unexpected small counts
+        try {
+          if (filter === 'active-ewes' || filter === 'active-rams') {
+            try {
+              const allSheep = all || [];
+              const activeEwes = allSheep.filter(s => { try { return matchesTab(s, 'active-ewes'); } catch (e) { return false; } });
+              const activeRams = allSheep.filter(s => { try { return matchesTab(s, 'active-rams'); } catch (e) { return false; } });
+              const activeNeither = allSheep.filter(s => { try { return isActiveStatus(s && s.status) && !matchesTab(s, 'active-ewes') && !matchesTab(s, 'active-rams'); } catch (e) { return false; } });
+              const sampleEwes = activeEwes.slice(0, 10).map(s => ({ id: s && s.id, sex: s && s.sex, status: s && s.status }));
+              const sampleRams = activeRams.slice(0, 10).map(s => ({ id: s && s.id, sex: s && s.sex, status: s && s.status }));
+              const sampleNeither = activeNeither.slice(0, 10).map(s => ({ id: s && s.id, sex: s && s.sex, status: s && s.status }));
+              console.info('[Actions Debug] active-tabs details', { activeEwesCount: activeEwes.length, activeRamsCount: activeRams.length, activeNeitherCount: activeNeither.length, sampleEwes, sampleRams, sampleNeither });
+            } catch (e) { console.warn('Actions debug gather failed', e); }
+          }
+        } catch (e) { }
+        if (search && search.trim()) {
+          const q = search.trim().toLowerCase();
+          rows = rows.filter(s => (String(s.name || '').toLowerCase().includes(q) || String(s.id || '').toLowerCase().includes(q)));
+        }
+
+        const container = document.getElementById('actionsTable');
+        if (!container) return;
+        if (!rows.length) { container.innerHTML = '<div style="color:#666">No animals found for this selection.</div>'; return; }
+
+        // determine visible columns using actions-specific settings (fallback to dashboard)
+        const colsMap = (typeof getActionsColumns === 'function') ? getActionsColumns(filter || 'all') : (getDashboardColumns ? getDashboardColumns(filter || 'all') : {});
+
+        const colDefs = [
+          { key: 'select', label: '', always: true },
+          { key: 'name', label: 'Name', always: true },
+          { key: 'tagType', label: 'Tag Type' },
+          { key: 'color', label: 'Colour' },
+          { key: 'id', label: 'ID' },
+          { key: 'breed', label: 'Breed' },
+          { key: 'sex', label: 'Sex' },
+          { key: 'status', label: 'Status' },
+          { key: 'birthDate', label: 'Birth Date' },
+          { key: 'age', label: 'Age' },
+          { key: 'weight', label: 'Weight' },
+          { key: 'sire', label: 'Sire' },
+          { key: 'dam', label: 'Dam' },
+          { key: 'sireSire', label: "Sire's Sire" },
+          { key: 'notes', label: 'Notes' },
+          { key: 'pastLambing', label: 'Past Lambing' },
+          { key: 'lastLambingDate', label: 'Last Lambing Date' },
+          { key: 'bredDate', label: 'Last Bred Date' },
+          { key: 'daysUntil', label: 'Days Until' },
+          { key: 'daysPost', label: 'Days Post Lambing' },
+          { key: 'expectedDueDate', label: 'Expected Due Date' },
+          { key: 'actions', label: 'Actions' }
+        ];
+
+        const visibleCols = colDefs.filter(cd => cd.always || (colsMap && colsMap[cd.key]));
+
+        // Sort rows according to global _sheepTableSort if set
+        try {
+          if (_sheepTableSort && _sheepTableSort.field) {
+            rows.sort((a, b) => compareSheep(a, b, _sheepTableSort.field));
+          }
+        } catch (e) { console.warn('actions table sort failed', e); }
+
+        let html = '<table class="animal-table" style="width:100%; border-collapse:collapse;">';
+        html += '<thead><tr>';
+        // columns that support sorting
+        const sortableKeys = new Set(['name', 'id', 'breed', 'sex', 'age', 'weight', 'sire', 'dam', 'pastLambing', 'lastLambingDate', 'bredDate', 'daysUntil', 'daysPost', 'expectedDueDate', 'color', 'tagType']);
+        // only allow sorting by `age` (months) when viewing current lambs
+        try { if (activeFilter !== 'current-lambs') { sortableKeys.delete('age'); } } catch (e) { }
+        visibleCols.forEach(cd => {
+          if (cd.key === 'select') html += '<th style="width:40px"><input id="selectAllRows" type="checkbox" title="Select all" /></th>';
+          else if (sortableKeys.has(cd.key)) html += `<th data-sort="${cd.key}">${cd.label}<span class="sort-indicator"></span></th>`;
+          else html += `<th>${cd.label}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        rows.forEach(s => {
+          const idRaw = s.id || '';
+          const id = escapeHtml(idRaw);
+          const name = escapeHtml(s.name || '');
+          const breed = escapeHtml(s.breed || '');
+          const sex = escapeHtml(s.sex || '');
+          const status = escapeHtml(s.status || '');
+          const bd = s.birthDate ? formatDateLong(s.birthDate) : '';
+          // pass current activeFilter so detail page can return to the same Actions tab
+          const link = buildDetailLink(s.id || '', activeFilter);
+
+          html += `<tr data-id="${id}">`;
+          // compute nursing badge HTML for this sheep (Actions table)
+          let nursingHtml = '';
+          let bredHtml = '';
+          let toBeCulledHtml = '';
+          try {
+            // To-be-culled badge based on status
+            try {
+              const st = (s.status || '').toString().toLowerCase();
+              const isToBe = st === 'to-be-culled' || st === 'to be culled' || st === 'tobe-culled' || st === 'to_be_culled';
+              if (isToBe) toBeCulledHtml = `<span class="badge badge-to-be-culled" data-id="${id}" title="To be culled">To be culled</span>`;
+            } catch (ee) { }
+            // Bred badge for ewes with bredDate/expectedDueDate
+            try {
+              const isEwe = (s.sex || '').toString().toLowerCase() === 'ewe';
+              const hasBred = !!(s.bredDate || s.expectedDueDate);
+              if (isEwe && hasBred) {
+                const title = s.bredDate ? (typeof formatDateLong === 'function' ? formatDateLong(s.bredDate) : s.bredDate) : '';
+                bredHtml = `<span class="badge badge-bred" data-id="${id}" title="Bred on ${escapeHtml(title)}">Bred</span>`;
+              }
+            } catch (ee) { }
+            // Nursing badge: recently lambed
+            try {
+              const sum = (typeof getSheepLambingSummary === 'function') ? getSheepLambingSummary(s) : null;
+              if (isEwe && sum && sum.lastDate) {
+                const last = new Date(sum.lastDate);
+                if (!isNaN(last)) {
+                  const diff = Math.floor((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24));
+                  const windowDays = (typeof localStorage !== 'undefined') ? parseInt(localStorage.getItem('nursingWindowDays') || '90', 10) : 90;
+                  if (!isNaN(diff) && diff >= 0 && diff <= windowDays) {
+                    const title = typeof formatDateLong === 'function' ? formatDateLong(sum.lastDate) : sum.lastDate;
+                    nursingHtml = `<span class="badge badge-nursing" data-id="${id}" title="Lambed on ${escapeHtml(title)} (${diff} days ago)">Nursing</span>`;
+                  }
+                }
+              }
+            } catch (ee) { }
+          } catch (e) { }
+
+          visibleCols.forEach(cd => {
+            switch (cd.key) {
+              case 'select': html += `<td style="text-align:center"><input class="row-checkbox" type="checkbox" data-id="${id}" /></td>`; break;
+              case 'name': html += `<td><a class="detail-link" href="${link}">${name || id}</a>${toBeCulledHtml}${bredHtml}${nursingHtml}</td>`; break;
+              case 'id': html += `<td>${id}</td>`; break;
+              case 'breed': html += `<td>${breed}</td>`; break;
+              case 'tagType': html += `<td><span class="editable" data-field="tagType" data-id="${id}">${escapeHtml(s.tagType || '')}</span></td>`; break;
+              case 'color': html += `<td><span class="editable" data-field="color" data-id="${id}">${escapeHtml(s.color || '')}</span></td>`; break;
+              case 'sex': html += `<td><span class="editable" data-field="sex" data-id="${id}">${sex}</span></td>`; break;
+              case 'status': {
+                const st = (s.status || '').toString().toLowerCase();
+                const opts = [
+                  { v: 'active', l: 'Active' },
+                  { v: 'to-be-culled', l: 'To Be Culled' },
+                  { v: 'culled', l: 'Culled' },
+                  { v: 'sold', l: 'Sold' },
+                  { v: 'archived', l: 'Archived' }
+                ];
+                let sel = `<select class="status-select" data-id="${id}">`;
+                opts.forEach(o => { sel += `<option value="${o.v}"${o.v === st ? ' selected' : ''}>${o.l}</option>`; });
+                sel += `</select>`;
+                html += `<td>${sel}</td>`;
+                break;
+              }
+              case 'birthDate': html += `<td>${bd}</td>`; break;
+              case 'age': html += `<td>${(typeof getDisplayAge === 'function') ? getDisplayAge(s) : (s.birthDate ? computeAge(s.birthDate) : (s.age || ''))}</td>`; break;
+              case 'weight': {
+                let wtText = '';
+                try { const lw = (typeof getSheepLatestWeight === 'function') ? getSheepLatestWeight(s) : (s.weight || ''); if (lw !== null && lw !== undefined && !isNaN(lw)) wtText = String(lw); } catch (e) { wtText = s.weight || ''; }
+                html += `<td><span class="editable" data-field="weight" data-id="${id}">${escapeHtml(wtText)}</span></td>`; break;
+              }
+              case 'sire': {
+                const sire = s.sire ? findSheepByNameOrId(s.sire) : null;
+                const sireText = sire ? (escapeHtml(sire.name || sire.id)) : escapeHtml(s.sire || '');
+                html += `<td>${sireText}</td>`; break;
+              }
+              case 'dam': {
+                const dam = s.dam ? findSheepByNameOrId(s.dam) : null;
+                const damText = dam ? (escapeHtml(dam.name || dam.id)) : escapeHtml(s.dam || '');
+                html += `<td>${damText}</td>`; break;
+              }
+              case 'sireSire': {
+                let txt = '';
+                try {
+                  const sire = s.sire ? findSheepByNameOrId(s.sire) : null;
+                  if (sire && sire.sire) {
+                    const ss = findSheepByNameOrId(sire.sire);
+                    txt = ss ? escapeHtml(ss.name || ss.id) : escapeHtml(sire.sire || '');
+                  }
+                } catch (e) { }
+                html += `<td>${txt}</td>`; break;
+              }
+              case 'notes': html += `<td><span class="editable" data-field="notes" data-id="${id}" data-full="${escapeHtml((s.notes || '').toString())}">${escapeHtml((s.notes || '').toString().slice(0, 120))}</span></td>`; break;
+              case 'pastLambing': {
+                const sum = getSheepLambingSummary(s);
+                const parts = [];
+                if (sum.single) parts.push(`S:${sum.single}`);
+                if (sum.twins) parts.push(`T:${sum.twins}`);
+                if (sum.triplets) parts.push(`Tr:${sum.triplets}`);
+                html += `<td>${parts.join(' ')}</td>`; break;
+              }
+              case 'lastLambingDate': {
+                let lastVal = '';
+                try { const last = getSheepLambingSummary(s).lastDate; if (last) lastVal = formatDateLong(last); } catch (e) { }
+                html += `<td>${escapeHtml(lastVal)}</td>`; break;
+              }
+              case 'bredDate': html += `<td><span class="editable" data-field="bredDate" data-id="${id}" data-value="${escapeHtml(s.bredDate || '')}">${s.bredDate ? formatDateLong(s.bredDate) : ''}</span></td>`; break;
+              case 'daysUntil': {
+                let val = '';
+                try {
+                  const due = (typeof getSheepExpectedDue === 'function') ? getSheepExpectedDue(s) : (s.expectedDueDate || null);
+                  if (due) { const d = new Date(due); if (!isNaN(d)) { const diff = Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24)); val = String(diff); } }
+                } catch (e) { }
+                html += `<td>${val}</td>`; break;
+              }
+              case 'daysPost': {
+                let val = '';
+                try { const last = getSheepLambingSummary(s).lastDate; if (last) { const d = new Date(last); if (!isNaN(d)) { const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)); val = String(diff); } } } catch (e) { }
+                html += `<td>${val}</td>`; break;
+              }
+              case 'expectedDueDate': {
+                let dueText = '';
+                try { const due = (typeof getSheepExpectedDue === 'function') ? getSheepExpectedDue(s) : (s.expectedDueDate || null); if (due) dueText = formatDateLong(due); } catch (e) { }
+                html += `<td>${dueText}</td>`; break;
+              }
+              case 'actions': html += `<td><button class="row-action button" data-id="${id}">Actions</button></td>`; break;
+              default: html += '<td></td>';
+            }
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        try { if (typeof wireDetailButtons === 'function') wireDetailButtons(container); } catch (e) { }
+        // Wire badge click/keyboard handlers so clicks don't toggle row selection
+        try {
+          const badgeEls = Array.from(container.querySelectorAll('.badge'));
+          badgeEls.forEach(b => {
+            try {
+              if (b._wired) return;
+              b.addEventListener('click', (ev) => { try { ev.stopPropagation(); const id = b.dataset && b.dataset.id ? b.dataset.id : null; if (id && typeof openQuickActions === 'function') openQuickActions(id, b); } catch (e) { } });
+              b.addEventListener('keydown', (ev) => { try { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); const id = b.dataset && b.dataset.id ? b.dataset.id : null; if (id && typeof openQuickActions === 'function') openQuickActions(id, b); } } catch (e) { } });
+              b._wired = true;
+            } catch (e) { }
+          });
+        } catch (e) { }
+
+        // Wire status select change handlers to persist changes
+        try {
+          const statusSelects = Array.from(container.querySelectorAll('.status-select'));
+          statusSelects.forEach(ss => {
+            if (ss._wired) return;
+            ss.addEventListener('change', (ev) => {
+              try {
+                const id = ss.dataset.id;
+                const newVal = ss.value;
+                if (!id) return;
+                const raw = localStorage.getItem('sheep-' + id);
+                let s = raw ? JSON.parse(raw) : { id };
+                s.status = newVal;
+                // optional timestamp for status change
+                try { s.statusDate = new Date().toISOString().slice(0, 10); } catch (e) { }
+                try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                try {
+                  const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+                  const idx = master.findIndex(x => x && x.id === id);
+                  if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s);
+                  else master.push(s);
+                  localStorage.setItem('sheepList', JSON.stringify(master));
+                } catch (e) { }
+                // refresh counts and table view
+                try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+                try { if (typeof updateTabCounts === 'function') updateTabCounts(); } catch (e) { }
+              } catch (e) { console.warn('status change failed', e); }
+            });
+            ss._wired = true;
+          });
+        } catch (e) { }
+
+        // Wire sorting UI for actions table headers
+        try {
+          const updateActionsSortIndicators = () => {
+            try {
+              const headers = Array.from(document.querySelectorAll('#actionsTable table th[data-sort]'));
+              headers.forEach(h => {
+                try {
+                  let ind = h.querySelector('.sort-indicator');
+                  if (!ind) { ind = document.createElement('span'); ind.className = 'sort-indicator'; h.appendChild(ind); }
+                  const field = h.getAttribute('data-sort');
+                  if (_sheepTableSort && _sheepTableSort.field === field) {
+                    ind.textContent = _sheepTableSort.asc ? ' ▲' : ' ▼';
+                  } else {
+                    ind.textContent = '';
+                  }
+                } catch (e) { }
+              });
+            } catch (e) { }
+          };
+
+          const ths = Array.from(document.querySelectorAll('#actionsTable table th[data-sort]'));
+          ths.forEach(th => {
+            try {
+              th.style.cursor = 'pointer';
+              // Avoid double-wiring by removing previous handler if present
+              if (th._actionsSortWired) return;
+              th.addEventListener('click', () => {
+                try {
+                  const field = th.getAttribute('data-sort');
+                  if (!field) return;
+                  if (_sheepTableSort && _sheepTableSort.field === field) {
+                    _sheepTableSort.asc = !_sheepTableSort.asc;
+                  } else {
+                    _sheepTableSort = { field: field, asc: true };
+                  }
+                  updateActionsSortIndicators();
+                  // rebuild the actions table with new sort
+                  buildTable(activeFilter, document.getElementById('actionsSearch').value || '');
+                } catch (e) { console.warn('actions sort click failed', e); }
+              });
+              th._actionsSortWired = true;
+            } catch (e) { }
+          });
+          // initialize indicators
+          updateActionsSortIndicators();
+        } catch (e) { console.warn('actions sort wiring failed', e); }
+
+        // Apply zebra class to the table if appearance setting enables zebra rows
+        try {
+          const tbl = container.querySelector('table');
+          if (tbl) {
+            const raw = localStorage.getItem('appearanceSettings');
+            const s = raw ? JSON.parse(raw) : {};
+            if (s && typeof s.tableZebra !== 'undefined' ? s.tableZebra : document.documentElement.classList.contains('global-table-zebra')) {
+              tbl.classList.add('zebra');
+            } else {
+              tbl.classList.remove('zebra');
+            }
+          }
+        } catch (e) { }
+
+        // wire select-all and row click behavior after DOM insertion
+        try {
+          const selectAll = document.getElementById('selectAllRows');
+          if (selectAll) {
+            selectAll.addEventListener('change', () => {
+              const checked = !!selectAll.checked;
+              document.querySelectorAll('#actionsTable .row-checkbox').forEach(cb => { try { cb.checked = checked; } catch (e) { } });
+              try { if (window.updateActionsSelectedCount) window.updateActionsSelectedCount(); } catch (e) { }
+            });
+          }
+          // clicking a row toggles the checkbox unless the click is on a link or input
+          const tableEl = container.querySelector('table');
+          if (tableEl) {
+            tableEl.addEventListener('click', (e) => {
+              try {
+                const target = e.target || e.srcElement;
+                // Handle per-row action buttons first (do not toggle row selection when button clicked)
+                if (target.closest('button') || target.tagName === 'BUTTON') {
+                  try {
+                    const btn = target.closest('button');
+                    if (btn && btn.classList && btn.classList.contains('row-action')) {
+                      const tr = btn.closest('tr');
+                      const id = btn.dataset.id || (tr && tr.getAttribute('data-id'));
+                      if (typeof openQuickActions === 'function') openQuickActions(id, btn);
+                    }
+                  } catch (ee) { }
+                  return;
+                }
+                if (target.closest('a') || target.tagName === 'A' || target.tagName === 'INPUT' || target.type === 'checkbox') return;
+                const tr = target.closest('tr');
+                if (!tr) return;
+                const cb = tr.querySelector('.row-checkbox');
+                if (cb) { cb.checked = !cb.checked; }
+                // update select-all state and selected count
+                const all = Array.from(document.querySelectorAll('#actionsTable .row-checkbox'));
+                const anyUnchecked = all.some(x => !x.checked);
+                if (selectAll) selectAll.checked = !anyUnchecked;
+                try { if (window.updateActionsSelectedCount) window.updateActionsSelectedCount(); } catch (e) { }
+              } catch (e) { }
+            });
+            // keep header select-all in sync when checkboxes change
+            tableEl.addEventListener('change', (e) => {
+              try {
+                if (!e.target || !e.target.classList) return;
+                if (!e.target.classList.contains('row-checkbox')) return;
+                const all = Array.from(document.querySelectorAll('#actionsTable .row-checkbox'));
+                const anyUnchecked = all.some(x => !x.checked);
+                if (selectAll) selectAll.checked = !anyUnchecked;
+                try { if (window.updateActionsSelectedCount) window.updateActionsSelectedCount(); } catch (e) { }
+              } catch (e) { }
+            });
+          }
+        } catch (e) { }
+        try { if (window.updateActionsSelectedCount) window.updateActionsSelectedCount(); } catch (e) { }
+
+        // Inline edit wiring: double-click editable spans to edit per-animal fields
+        try {
+          function wireInlineEditors() {
+            try {
+              const editEls = Array.from(container.querySelectorAll('.editable'));
+              editEls.forEach(el => {
+                if (el._inlineWired) return;
+                el.addEventListener('dblclick', (ev) => {
+                  try {
+                    ev && ev.preventDefault();
+                    const field = el.dataset.field;
+                    const id = el.dataset.id;
+                    if (!field || !id) return;
+                    let input;
+                    const original = (field === 'notes') ? (el.dataset.full || el.textContent || '') : (el.dataset.value || el.textContent || '');
+                    if (field === 'notes') {
+                      input = document.createElement('textarea'); input.style.width = '300px'; input.style.minHeight = '80px'; input.value = original;
+                    } else if (field === 'sex') {
+                      input = document.createElement('select');['Ewe', 'Ram'].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; input.appendChild(o); }); input.value = original || '';
+                    } else if (field === 'tagType') {
+                      input = document.createElement('select');
+                      const nc = document.createElement('option'); nc.value = ''; nc.textContent = '(no change)'; input.appendChild(nc);
+                      try {
+                        if (Array.isArray(window.SHEEP_TAG_TYPE_OPTIONS)) {
+                          window.SHEEP_TAG_TYPE_OPTIONS.forEach(opt => {
+                            try { const o = document.createElement('option'); o.value = opt.value || opt; o.textContent = opt.label || opt.value || opt; input.appendChild(o); } catch (e) { }
+                          });
+                        }
+                      } catch (e) { }
+                      input.value = original || '';
+                    } else if (field === 'color') {
+                      input = document.createElement('select');
+                      // prepend a no-change option for inline editors
+                      const nc = document.createElement('option'); nc.value = ''; nc.textContent = '(no change)'; input.appendChild(nc);
+                      try {
+                        if (Array.isArray(window.SHEEP_COLOR_OPTIONS)) {
+                          window.SHEEP_COLOR_OPTIONS.forEach(opt => {
+                            try { const o = document.createElement('option'); o.value = opt.value || opt; o.textContent = opt.label || opt.value || opt; input.appendChild(o); } catch (e) { }
+                          });
+                        }
+                      } catch (e) { }
+                      input.value = original || '';
+                    } else if (field === 'bredDate') {
+                      input = document.createElement('input'); input.type = 'date'; input.value = original || '';
+                    } else if (field === 'weight') {
+                      input = document.createElement('input'); input.type = 'number'; input.min = '0'; input.style.width = '80px'; input.value = original || '';
+                    } else {
+                      input = document.createElement('input'); input.type = 'text'; input.value = original || ''; input.style.width = '200px';
+                    }
+                    const wrapper = document.createElement('div'); wrapper.style.display = 'inline-block'; wrapper.appendChild(input);
+                    el.style.display = 'none'; el.parentNode.insertBefore(wrapper, el);
+                    input.focus();
+
+                    function finish(save) {
+                      try {
+                        const newVal = (input && typeof input.value !== 'undefined') ? input.value : '';
+                        wrapper.remove(); el.style.display = '';
+                        if (!save) return;
+                        try {
+                          const raw = localStorage.getItem('sheep-' + id);
+                          const s = raw ? JSON.parse(raw) : { id };
+                          if (field === 'weight') {
+                            if (newVal === '') { delete s.weight; }
+                            else {
+                              // Ask user for a date to attach to this weight (default today)
+                              try {
+                                const def = new Date().toISOString().slice(0, 10);
+                                try {
+                                  if (typeof askWeightDateModal === 'function') {
+                                    askWeightDateModal(def, (resp) => {
+                                      try {
+                                        if (!resp) resp = def;
+                                        const dd = new Date(resp);
+                                        if (isNaN(dd.getTime())) { resp = def; }
+                                        s.weight = Number(newVal);
+                                        s.weights = Array.isArray(s.weights) ? s.weights : [];
+                                        s.weights.push({ date: resp, weight: Number(newVal) });
+                                        // persist and refresh table
+                                        try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                                        try { const master = JSON.parse(localStorage.getItem('sheepList') || '[]'); const idx = master.findIndex(x => x && x.id === id); if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s); localStorage.setItem('sheepList', JSON.stringify(master)); } catch (e) { }
+                                        try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+                                      } catch (e) { }
+                                    });
+                                  } else {
+                                    // fallback to prompt
+                                    let resp = prompt('Enter date for this weight (YYYY-MM-DD):', def);
+                                    if (!resp) resp = def;
+                                    const dd = new Date(resp);
+                                    if (isNaN(dd.getTime())) resp = def;
+                                    s.weight = Number(newVal);
+                                    s.weights = Array.isArray(s.weights) ? s.weights : [];
+                                    s.weights.push({ date: resp, weight: Number(newVal) });
+                                  }
+                                } catch (e) { s.weight = Number(newVal); }
+                              } catch (e) { s.weight = Number(newVal); }
+                            }
+                          }
+                          if (field === 'weight') return;
+                          else if (field === 'notes') {
+                            s.notes = newVal;
+                          } else if (field === 'bredDate') {
+                            s.bredDate = newVal || undefined;
+                          } else if (field === 'sex') {
+                            s.sex = newVal || '';
+                          } else if (field === 'color') {
+                            s.color = newVal || '';
+                          } else if (field === 'tagType') {
+                            s.tagType = newVal || '';
+                          } else if (field === 'name') {
+                            s.name = newVal || '';
+                          } else {
+                            s[field] = newVal;
+                          }
+                          try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                          try {
+                            const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+                            const idx = master.findIndex(x => x && x.id === id);
+                            if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s);
+                            localStorage.setItem('sheepList', JSON.stringify(master));
+                          } catch (e) { }
+                          try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+                        } catch (e) { console.warn('inline save failed', e); }
+                      } catch (e) { }
+                    }
+
+                    input.addEventListener('keydown', (ke) => {
+                      try { if (ke.key === 'Enter' && field !== 'notes') { ke.preventDefault(); finish(true); } else if (ke.key === 'Escape') { ke.preventDefault(); finish(false); } } catch (e) { }
+                    });
+                    input.addEventListener('blur', () => { finish(true); });
+                  } catch (e) { console.warn('inline edit open failed', e); }
+                });
+                el._inlineWired = true;
+              });
+            } catch (e) { console.warn('wireInlineEditors failed', e); }
+          }
+          try { wireInlineEditors(); } catch (e) { }
+          try { window.wireInlineEditors = wireInlineEditors; } catch (e) { }
+        } catch (e) { console.warn('inline editors wiring failed', e); }
+      }
+
+      // Persist inferred lambings (so lamb-based views update) and initial render
+      try { if (typeof persistInferredLambingsForAll === 'function') persistInferredLambingsForAll(); } catch (e) { }
+      try { renderBreedingSummary(); } catch (e) { }
+      // initial render
+      computeCounts();
+      buildTable(activeFilter, '');
+
+      // wire summary card clicks and make them act like dashboard tabs
+      summaryCards.forEach(card => {
+        card.addEventListener('click', () => {
+          const tab = card.getAttribute('data-tab') || 'all';
+          activeFilter = tab;
+          // toggle active class to match dashboard tabs
+          summaryCards.forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          buildTable(activeFilter, document.getElementById('actionsSearch').value || '');
+          try { toggleLambAgeHolderVisibility(); } catch (e) { }
+        });
+      });
+
+      // Helper: show lamb age control beside search only for Current Lambs
+      function toggleLambAgeHolderVisibility() {
+        try {
+          const holder = document.getElementById('lambAgeControlHolder');
+          if (!holder) return;
+          holder.style.display = (activeFilter === 'current-lambs') ? 'flex' : 'none';
+        } catch (e) { }
+      }
+      try { window.toggleLambAgeHolderVisibility = toggleLambAgeHolderVisibility; } catch (e) { }
+
+      // set initial active tab to match `activeFilter` (default 'all')
+      try {
+        const initial = document.querySelector(`#actionsSummary .summary-card[data-tab="${activeFilter}"]`);
+        if (initial) initial.classList.add('active');
+        try { toggleLambAgeHolderVisibility(); } catch (e) { }
+      } catch (e) { }
+
+      // controls
+      const showAllBtnEl = document.getElementById('showAllBtn');
+      if (showAllBtnEl) showAllBtnEl.addEventListener('click', () => { activeFilter = 'all'; buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); try { toggleLambAgeHolderVisibility(); } catch (e) { } });
+      const showActiveEwesBtnEl = document.getElementById('showActiveEwesBtn');
+      if (showActiveEwesBtnEl) showActiveEwesBtnEl.addEventListener('click', () => { activeFilter = 'active-ewes'; buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); try { toggleLambAgeHolderVisibility(); } catch (e) { } });
+      const showActiveRamsBtnEl = document.getElementById('showActiveRamsBtn');
+      if (showActiveRamsBtnEl) showActiveRamsBtnEl.addEventListener('click', () => { activeFilter = 'active-rams'; buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); try { toggleLambAgeHolderVisibility(); } catch (e) { } });
+      document.getElementById('actionsSearch').addEventListener('input', (e) => { buildTable(activeFilter, e.target.value || ''); });
+
+      // Lamb age months control wiring
+      try {
+        const lamInput = document.getElementById('lambAgeMonthsInput');
+        const lamBtn = document.getElementById('applyLambAgeBtn');
+        const stored = parseInt(localStorage.getItem('lambAgeMonths') || '8', 10) || 8;
+        if (lamInput) lamInput.value = String(stored);
+        if (lamBtn && lamInput) lamBtn.addEventListener('click', () => {
+          const v = parseInt(lamInput.value || '8', 10);
+          const months = (isNaN(v) || v < 0) ? 8 : v;
+          try { localStorage.setItem('lambAgeMonths', String(months)); } catch (e) { }
+          // Update per-animal matured flag based on new threshold so animals move between lamb/active tabs
+          try {
+            const all = JSON.parse(localStorage.getItem('sheepList') || '[]');
+            const now = new Date();
+            all.forEach(item => {
+              try {
+                if (!item || !item.id) return;
+                if (!item.birthDate) {
+                  // if no birthDate, ensure _matured is not set by this automation
+                  if (item._autoMatured) { delete item._autoMatured; try { if (typeof saveSheepRecord === 'function') saveSheepRecord(item); else localStorage.setItem('sheep-' + item.id, JSON.stringify(item)); } catch (e) { } }
+                  return;
+                }
+                const bd = new Date(item.birthDate);
+                if (isNaN(bd)) return;
+                const ageMonths = (now.getFullYear() - bd.getFullYear()) * 12 + (now.getMonth() - bd.getMonth());
+                const wasAuto = !!item._autoMatured;
+                const shouldMature = ageMonths >= months;
+                if (shouldMature && !wasAuto) {
+                  // mark as auto-matured so isLamb() treats as matured
+                  item._autoMatured = true;
+                  try { if (typeof saveSheepRecord === 'function') saveSheepRecord(item); else localStorage.setItem('sheep-' + item.id, JSON.stringify(item)); } catch (e) { }
+                } else if (!shouldMature && wasAuto) {
+                  // unmark auto-matured when falling back under threshold
+                  delete item._autoMatured;
+                  try { if (typeof saveSheepRecord === 'function') saveSheepRecord(item); else localStorage.setItem('sheep-' + item.id, JSON.stringify(item)); } catch (e) { }
+                }
+              } catch (e) { }
+            });
+            // ensure the master list is updated with any _autoMatured changes
+            try {
+              const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+              all.forEach(s => {
+                const idx = master.findIndex(x => x && x.id === s.id);
+                if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s);
+                else master.push(s);
+              });
+              localStorage.setItem('sheepList', JSON.stringify(master));
+            } catch (e) { }
+          } catch (e) { }
+          try { computeCounts(); } catch (e) { }
+          try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+        });
+      } catch (e) { }
+
+      // Bulk edit wiring
+      try {
+        const bulkBtn = document.getElementById('actBulkEditColumns');
+        const bulkModal = document.getElementById('bulkEditModal');
+        const bulkClose = document.getElementById('bulkEditClose');
+        const bulkCancel = document.getElementById('bulkEditCancel');
+        const bulkApply = document.getElementById('bulkEditApply');
+
+        function openBulkModal() {
+          try {
+            // ensure colour dropdown is populated from central list before showing
+            const beColour = document.getElementById('be_colour');
+            if (beColour) {
+              beColour.innerHTML = '';
+              const nc = document.createElement('option'); nc.value = ''; nc.textContent = '(no change)'; beColour.appendChild(nc);
+              try {
+                const opts = (window.SHEEP_COLOR_OPTIONS && Array.isArray(window.SHEEP_COLOR_OPTIONS)) ? window.SHEEP_COLOR_OPTIONS : [];
+                opts.forEach(opt => { try { const o = document.createElement('option'); o.value = opt.value || opt; o.textContent = opt.label || opt.value || opt; beColour.appendChild(o); } catch (e) { } });
+              } catch (e) { }
+            }
+            // populate tag type dropdown from central list
+            const beTag = document.getElementById('be_tag_type');
+            if (beTag) {
+              beTag.innerHTML = '';
+              const nc2 = document.createElement('option'); nc2.value = ''; nc2.textContent = '(no change)'; beTag.appendChild(nc2);
+              try {
+                const opts2 = (window.SHEEP_TAG_TYPE_OPTIONS && Array.isArray(window.SHEEP_TAG_TYPE_OPTIONS)) ? window.SHEEP_TAG_TYPE_OPTIONS : [];
+                opts2.forEach(opt => { try { const o = document.createElement('option'); o.value = opt.value || opt; o.textContent = opt.label || opt.value || opt; beTag.appendChild(o); } catch (e) { } });
+              } catch (e) { }
+            }
+          } catch (e) { }
+          if (bulkModal) bulkModal.style.display = 'block';
+        }
+        function closeBulkModal() {
+          if (bulkModal) bulkModal.style.display = 'none';
+        }
+
+        if (bulkBtn) bulkBtn.addEventListener('click', () => { openBulkModal(); });
+        if (bulkClose) bulkClose.addEventListener('click', closeBulkModal);
+        if (bulkCancel) bulkCancel.addEventListener('click', closeBulkModal);
+
+        if (bulkApply) bulkApply.addEventListener('click', () => {
+          // gather selected ids
+          let ids = Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).map(cb => cb.dataset.id).filter(Boolean);
+          if (!ids.length) {
+            const input = prompt('No rows selected. Enter comma-separated IDs to apply changes to:');
+            if (!input) return alert('No IDs provided.');
+            ids = input.split(',').map(s => s.trim()).filter(Boolean);
+          }
+
+          // If weight is included, we'll request a date via modal (askWeightDateModal)
+
+          // collect changes based on checkboxes
+          const changes = {};
+          try {
+            if (document.getElementById('be_name_chk').checked) changes.name = document.getElementById('be_name').value || '';
+            if (document.getElementById('be_weight_chk').checked) changes.weight = (document.getElementById('be_weight').value || '') === '' ? null : Number(document.getElementById('be_weight').value);
+            if (document.getElementById('be_notes_chk').checked) changes.notes = document.getElementById('be_notes').value || '';
+            if (document.getElementById('be_sex_chk').checked) changes.sex = document.getElementById('be_sex').value || '';
+            if (document.getElementById('be_tagType_chk') && document.getElementById('be_tagType_chk').checked) changes.tagType = document.getElementById('be_tag_type').value || '';
+            if (document.getElementById('be_colour_chk').checked) changes.color = document.getElementById('be_colour').value || '';
+            if (document.getElementById('be_bred_chk').checked) changes.bredDate = document.getElementById('be_bred').value || '';
+          } catch (e) { }
+
+          if (!Object.keys(changes).length) return alert('No fields selected to update.');
+
+
+          // If weight is included, open modal to ask for a date then proceed; otherwise continue
+          if (Object.prototype.hasOwnProperty.call(changes, 'weight') && changes.weight !== null) {
+            const def = new Date().toISOString().slice(0, 10);
+            if (typeof askWeightDateModal === 'function') {
+              askWeightDateModal(def, (resp) => {
+                try {
+                  if (!resp) resp = def;
+                  if (!confirm(`Apply changes to ${ids.length} animals?`)) return;
+                  // Apply changes now
+                  try {
+                    const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+                    ids.forEach(id => {
+                      try {
+                        const raw = localStorage.getItem('sheep-' + id);
+                        const s = raw ? JSON.parse(raw) : { id };
+                        Object.keys(changes).forEach(k => {
+                          const v = changes[k];
+                          try {
+                            if (k === 'weight') {
+                              if (v === null) { delete s.weight; }
+                              else {
+                                s.weight = Number(v);
+                                s.weights = Array.isArray(s.weights) ? s.weights : [];
+                                if (resp) s.weights.push({ date: resp, weight: Number(v) });
+                              }
+                            } else { s[k] = v; }
+                          } catch (e) { s[k] = v; }
+                        });
+                        try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                        const idx = master.findIndex(x => x && x.id === id);
+                        if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s);
+                      } catch (e) { console.warn('bulk edit per-id failed', id, e); }
+                    });
+                    localStorage.setItem('sheepList', JSON.stringify(master));
+                    try { computeCounts(); } catch (e) { }
+                    try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+                    alert('Bulk edit applied to ' + ids.length + ' animals.');
+                    closeBulkModal();
+                  } catch (e) { console.warn('bulk edit failed', e); alert('Bulk edit failed; see console.'); }
+                } catch (e) { console.warn(e); }
+              });
+            } else {
+              // fallback to prompt
+              let resp = prompt('Enter date for weight entries (YYYY-MM-DD):', def);
+              if (!resp) resp = def;
+              if (!confirm(`Apply changes to ${ids.length} animals?`)) return;
+              try {
+                const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+                ids.forEach(id => {
+                  try {
+                    const raw = localStorage.getItem('sheep-' + id);
+                    const s = raw ? JSON.parse(raw) : { id };
+                    Object.keys(changes).forEach(k => {
+                      const v = changes[k];
+                      try { if (k === 'weight') { if (v === null) delete s.weight; else { s.weight = Number(v); s.weights = Array.isArray(s.weights) ? s.weights : []; if (resp) s.weights.push({ date: resp, weight: Number(v) }); } } else { s[k] = v; } } catch (e) { s[k] = v; }
+                    });
+                    try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                    const idx = master.findIndex(x => x && x.id === id);
+                    if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s);
+                  } catch (e) { console.warn('bulk edit per-id failed', id, e); }
+                });
+                localStorage.setItem('sheepList', JSON.stringify(master));
+                try { computeCounts(); } catch (e) { }
+                try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+                alert('Bulk edit applied to ' + ids.length + ' animals.');
+                closeBulkModal();
+              } catch (e) { console.warn('bulk edit failed', e); alert('Bulk edit failed; see console.'); }
+            }
+            return;
+          }
+
+          if (!confirm(`Apply changes to ${ids.length} animals?`)) return;
+
+          // apply changes to each sheep record and update master list
+          try {
+            const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+            ids.forEach(id => {
+              try {
+                const raw = localStorage.getItem('sheep-' + id);
+                const s = raw ? JSON.parse(raw) : { id };
+                Object.keys(changes).forEach(k => {
+                  const v = changes[k];
+                  try {
+                    if (k === 'weight') {
+                      if (v === null) { delete s.weight; }
+                      else {
+                        s.weight = Number(v);
+                        // append dated weight entry
+                        try {
+                          s.weights = Array.isArray(s.weights) ? s.weights : [];
+                          if (weightDateForBulk) s.weights.push({ date: weightDateForBulk, weight: Number(v) });
+                        } catch (e) { }
+                      }
+                    } else { s[k] = v; }
+                  } catch (e) { s[k] = v; }
+                });
+                try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                const idx = master.findIndex(x => x && x.id === id);
+                if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s);
+              } catch (e) { console.warn('bulk edit per-id failed', id, e); }
+            });
+            localStorage.setItem('sheepList', JSON.stringify(master));
+            try { computeCounts(); } catch (e) { }
+            try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+            alert('Bulk edit applied to ' + ids.length + ' animals.');
+            closeBulkModal();
+          } catch (e) { console.warn('bulk edit failed', e); alert('Bulk edit failed; see console.'); }
+        });
+      } catch (e) { console.warn('bulk edit wiring failed', e); }
+
+      // Selection helpers wiring (Select All / Clear Selection and selected count)
+      try {
+        const selAllVisibleBtn = document.getElementById('selectAllVisible');
+        const clearSelBtn = document.getElementById('clearSelection');
+        const selectedCountEl = document.getElementById('selectedCount');
+        function updateActionsSelectedCount() {
+          try {
+            const checked = Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).length;
+            if (selectedCountEl) selectedCountEl.textContent = `${checked} selected`;
+            try { const bulkBtn = document.getElementById('actBulkEditColumns'); if (bulkBtn) bulkBtn.disabled = checked === 0; } catch (e) { }
+          } catch (e) { }
+        }
+        window.updateActionsSelectedCount = updateActionsSelectedCount;
+
+        if (selAllVisibleBtn) selAllVisibleBtn.addEventListener('click', () => {
+          try { document.querySelectorAll('#actionsTable .row-checkbox').forEach(cb => { try { cb.checked = true; } catch (e) { } }); } catch (e) { }
+          try { const hdr = document.getElementById('selectAllRows'); if (hdr) hdr.checked = true; } catch (e) { }
+          try { updateActionsSelectedCount(); } catch (e) { }
+        });
+
+        if (clearSelBtn) clearSelBtn.addEventListener('click', () => {
+          try { document.querySelectorAll('#actionsTable .row-checkbox').forEach(cb => { try { cb.checked = false; } catch (e) { } }); } catch (e) { }
+          try { const hdr = document.getElementById('selectAllRows'); if (hdr) hdr.checked = false; } catch (e) { }
+          try { updateActionsSelectedCount(); } catch (e) { }
+        });
+      } catch (e) { console.warn('selection helpers wiring failed', e); }
+
+      // Edit Columns mode: enable inline editing for all visible editable cells and show Save button
+      try {
+        let _actionsEditMode = false;
+        const editBtn = document.getElementById('editColumnsBtn');
+        const saveBtn = document.getElementById('saveColumnsBtn');
+
+        function enterEditColumnsMode() {
+          try {
+            if (_actionsEditMode) return;
+            _actionsEditMode = true;
+            if (editBtn) editBtn.style.display = 'none';
+            if (saveBtn) saveBtn.style.display = 'inline-block';
+            const editEls = Array.from(document.querySelectorAll('#actionsTable .editable'));
+            editEls.forEach(el => {
+              try {
+                if (el.dataset._bulkEdited) return;
+                const field = el.dataset.field;
+                const id = el.dataset.id;
+                const original = (field === 'notes') ? (el.dataset.full || el.textContent) : (el.dataset.value || el.textContent);
+                let input;
+                if (field === 'notes') {
+                  input = document.createElement('textarea'); input.style.width = '100%'; input.style.minHeight = '56px'; input.value = original || '';
+                } else if (field === 'sex') {
+                  input = document.createElement('select');['Ewe', 'Ram'].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v || ''; input.appendChild(o); }); input.value = original || '';
+                } else if (field === 'tagType') {
+                  input = document.createElement('select');
+                  try {
+                    const opts = (window.SHEEP_TAG_TYPE_OPTIONS && Array.isArray(window.SHEEP_TAG_TYPE_OPTIONS)) ? window.SHEEP_TAG_TYPE_OPTIONS : [];
+                    const nc = document.createElement('option'); nc.value = ''; nc.textContent = '(no change)'; input.appendChild(nc);
+                    opts.forEach(opt => { try { const o = document.createElement('option'); o.value = opt.value || opt; o.textContent = opt.label || opt.value || opt; input.appendChild(o); } catch (e) { } });
+                    if (original && !Array.from(input.options).some(o => String(o.value) === String(original))) { const o = document.createElement('option'); o.value = original; o.textContent = original; input.insertBefore(o, input.children[0]); }
+                  } catch (e) { }
+                  input.value = original || '';
+                } else if (field === 'color') {
+                  input = document.createElement('select');
+                  try {
+                    const opts = (window.SHEEP_COLOR_OPTIONS && Array.isArray(window.SHEEP_COLOR_OPTIONS)) ? window.SHEEP_COLOR_OPTIONS : [];
+                    // add a '(no change)' placeholder
+                    const nc = document.createElement('option'); nc.value = ''; nc.textContent = '(no change)'; input.appendChild(nc);
+                    opts.forEach(opt => { try { const o = document.createElement('option'); o.value = opt.value || opt; o.textContent = opt.label || opt.value || opt; input.appendChild(o); } catch (e) { } });
+                    // if original has a value not present in list, add it so it's visible/selectable
+                    if (original && !Array.from(input.options).some(o => String(o.value) === String(original))) {
+                      const o = document.createElement('option'); o.value = original; o.textContent = original; input.insertBefore(o, input.children[0]);
+                    }
+                  } catch (e) { }
+                  input.value = original || '';
+                } else if (field === 'bredDate') {
+                  input = document.createElement('input'); input.type = 'date'; input.value = original || '';
+                } else if (field === 'weight') {
+                  input = document.createElement('input'); input.type = 'number'; input.min = '0'; input.style.width = '80px'; input.value = original || '';
+                } else {
+                  input = document.createElement('input'); input.type = 'text'; input.style.width = '200px'; input.value = original || '';
+                }
+                input.className = 'bulk-edit-input';
+                input.setAttribute('data-field', field);
+                input.setAttribute('data-id', id);
+                el.style.display = 'none';
+                el.parentNode.insertBefore(input, el);
+                el.dataset._bulkEdited = '1';
+              } catch (e) { }
+            });
+          } catch (e) { console.warn('enterEditColumnsMode failed', e); }
+        }
+
+        // expose inline handlers to global scope so other scripts can invoke them
+        try { window.enterEditColumnsMode = enterEditColumnsMode; } catch (e) { }
+
+        function saveEditColumnsMode() {
+          try {
+            if (!_actionsEditMode) return;
+            const inputs = Array.from(document.querySelectorAll('#actionsTable .bulk-edit-input'));
+            if (!inputs.length) {
+              // nothing to save, exit
+              _actionsEditMode = false;
+              if (editBtn) editBtn.style.display = 'inline-block';
+              if (saveBtn) saveBtn.style.display = 'none';
+              try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+              return;
+            }
+            const grouped = {};
+            inputs.forEach(inp => {
+              try {
+                const id = inp.dataset.id;
+                const field = inp.dataset.field;
+                const val = inp.value;
+                if (!grouped[id]) grouped[id] = {};
+                if (field === 'weight') { if (val === '') grouped[id][field] = null; else grouped[id][field] = Number(val); }
+                else grouped[id][field] = val;
+              } catch (e) { }
+            });
+            const master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+            Object.keys(grouped).forEach(id => {
+              try {
+                const raw = localStorage.getItem('sheep-' + id);
+                const s = raw ? JSON.parse(raw) : { id };
+                Object.keys(grouped[id]).forEach(k => {
+                  const v = grouped[id][k];
+                  try { if (k === 'weight') { if (v === null) { delete s.weight; } else s.weight = Number(v); } else { s[k] = v; } } catch (e) { s[k] = v; }
+                });
+                try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+                const idx = master.findIndex(x => x && x.id === id);
+                if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s);
+              } catch (e) { console.warn('save bulk per-id failed', id, e); }
+            });
+            localStorage.setItem('sheepList', JSON.stringify(master));
+            _actionsEditMode = false;
+            if (editBtn) editBtn.style.display = 'inline-block';
+            if (saveBtn) saveBtn.style.display = 'none';
+            try { computeCounts(); } catch (e) { }
+            try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+            alert('Changes saved.');
+          } catch (e) { console.warn('saveEditColumnsMode failed', e); alert('Save failed; see console.'); }
+        }
+
+        try { window.saveEditColumnsMode = saveEditColumnsMode; } catch (e) { }
+
+        if (editBtn) editBtn.addEventListener('click', () => enterEditColumnsMode());
+        if (saveBtn) saveBtn.addEventListener('click', () => saveEditColumnsMode());
+        try { const topEdit = document.getElementById('topEditColumnsBtn'); if (topEdit) { topEdit.addEventListener('click', () => enterEditColumnsMode()); topEdit.style.display = 'inline-block'; topEdit.disabled = false; } } catch (e) { }
+
+        // Ensure buttons are visible/enabled on initial load (guard against accidental hide)
+        try { if (editBtn) { editBtn.style.display = 'inline-block'; editBtn.disabled = false; } } catch (e) { }
+        try { const topBulk = document.getElementById('actBulkEditColumns'); if (topBulk) { topBulk.style.display = 'inline-block'; topBulk.disabled = false; } } catch (e) { }
+      } catch (e) { console.warn('edit columns wiring failed', e); }
+
+      // Promote selected lambs: mark selected rows' sheep with _matured flag
+      try {
+        const promoteBtn = document.getElementById('actPromoteLambs');
+        if (promoteBtn) promoteBtn.addEventListener('click', () => {
+          const ids = Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).map(cb => cb.dataset.id).filter(Boolean);
+          if (!ids.length) return alert('No lambs selected');
+          if (!confirm(`Promote ${ids.length} selected sheep (mark as matured)?`)) return;
+          let master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+          ids.forEach(id => {
+            try {
+              const raw = localStorage.getItem('sheep-' + id);
+              let s = raw ? JSON.parse(raw) : { id };
+              try { s._matured = true; } catch (e) { s._matured = true; }
+              try { if (typeof saveSheepRecord === 'function') saveSheepRecord(s); else localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (e) { try { localStorage.setItem('sheep-' + id, JSON.stringify(s)); } catch (ee) { } }
+              const idx = master.findIndex(x => x && x.id === id);
+              if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s); else master.push(s);
+            } catch (e) { console.warn(e); }
+          });
+          localStorage.setItem('sheepList', JSON.stringify(master));
+          try { computeCounts(); } catch (e) { }
+          try { buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); } catch (e) { }
+        });
+      } catch (e) { }
+
+      // Settings modal wiring: allow per-tab column selection
+      try {
+        const settingsBtn = document.getElementById('actSettings');
+        const modal = document.getElementById('columnsSettingsModal');
+        const closeX = document.getElementById('columnsSettingsClose');
+        const cancelBtn = document.getElementById('columnsCancelBtn');
+        const saveBtn = document.getElementById('columnsSaveBtn');
+        const tabSelect = document.getElementById('columnsTabSelect');
+        const chk_map = {
+          // note: name/id are not stored in dashboardColumns; we still expose toggles but keep name/id on by default
+          name: document.getElementById('col_name'),
+          id: document.getElementById('col_id'),
+          breed: document.getElementById('col_breed'),
+          color: document.getElementById('col_color'),
+          sire: document.getElementById('col_sire'),
+          dam: document.getElementById('col_dam'),
+          sireSire: document.getElementById('col_sireSire'),
+          notes: document.getElementById('col_notes'),
+          age: document.getElementById('col_age'),
+          weight: document.getElementById('col_weight'),
+          sex: document.getElementById('col_sex'),
+          pastLambing: document.getElementById('col_pastLambing'),
+          lastLambingDate: document.getElementById('col_lastLambingDate'),
+          bredDate: document.getElementById('col_bredDate'),
+          daysUntil: document.getElementById('col_daysUntil'),
+          daysPost: document.getElementById('col_daysPost'),
+          expectedDueDate: document.getElementById('col_expectedDueDate'),
+          status: document.getElementById('col_status'),
+          actions: document.getElementById('col_actions')
+        };
+
+        const loadForTab = (tab) => {
+          try {
+            const cols = (typeof getActionsColumns === 'function') ? getActionsColumns(tab || 'all') : (getDashboardColumns ? getDashboardColumns(tab || 'all') : {}) || {};
+            // name is always visible for UX; id is configurable
+            if (chk_map.name) chk_map.name.checked = true;
+            if (chk_map.id) chk_map.id.checked = !!cols.id;
+            if (chk_map.breed) chk_map.breed.checked = !!cols.breed;
+            if (chk_map.color) chk_map.color.checked = !!cols.color;
+            if (chk_map.sire) chk_map.sire.checked = !!cols.sire;
+            if (chk_map.dam) chk_map.dam.checked = !!cols.dam;
+            if (chk_map.sireSire) chk_map.sireSire.checked = !!cols.sireSire;
+            if (chk_map.notes) chk_map.notes.checked = !!cols.notes;
+            if (chk_map.age) chk_map.age.checked = !!cols.age;
+            if (chk_map.weight) chk_map.weight.checked = !!cols.weight;
+            if (chk_map.sex) chk_map.sex.checked = !!cols.sex;
+            if (chk_map.status) chk_map.status.checked = !!cols.status;
+            if (chk_map.pastLambing) chk_map.pastLambing.checked = !!cols.pastLambing;
+            if (chk_map.lastLambingDate) chk_map.lastLambingDate.checked = !!cols.lastLambingDate;
+            if (chk_map.bredDate) chk_map.bredDate.checked = !!cols.bredDate;
+            if (chk_map.daysUntil) chk_map.daysUntil.checked = !!cols.daysUntil;
+            if (chk_map.daysPost) chk_map.daysPost.checked = !!cols.daysPost;
+            if (chk_map.expectedDueDate) chk_map.expectedDueDate.checked = !!cols.expectedDueDate;
+            if (chk_map.actions) chk_map.actions.checked = !!cols.actions;
+          } catch (e) { }
+        };
+
+        if (settingsBtn && modal) {
+          settingsBtn.addEventListener('click', () => {
+            try {
+              // default the tab select to the currently active filter so checkboxes match visible columns
+              if (tabSelect) try { tabSelect.value = activeFilter || tabSelect.value || 'all'; } catch (e) { }
+              modal.style.display = 'block';
+              loadForTab((tabSelect && tabSelect.value) ? tabSelect.value : (activeFilter || 'all'));
+            } catch (e) { }
+          });
+        }
+        if (closeX) closeX.onclick = () => { try { modal.style.display = 'none'; } catch (e) { } };
+        if (cancelBtn) cancelBtn.addEventListener('click', () => { try { modal.style.display = 'none'; } catch (e) { } });
+        if (tabSelect) tabSelect.addEventListener('change', (e) => { loadForTab(e.target.value); });
+        if (saveBtn) saveBtn.addEventListener('click', () => {
+          try {
+            const tab = (tabSelect && tabSelect.value) ? tabSelect.value : 'all';
+            const map = {
+              // allow ID to be saved so users can hide it on Actions page
+              id: !!(chk_map.id && chk_map.id.checked),
+              breed: !!(chk_map.breed && chk_map.breed.checked),
+              color: !!(chk_map.color && chk_map.color.checked),
+              sire: !!(chk_map.sire && chk_map.sire.checked),
+              dam: !!(chk_map.dam && chk_map.dam.checked),
+              sireSire: !!(chk_map.sireSire && chk_map.sireSire.checked),
+              notes: !!(chk_map.notes && chk_map.notes.checked),
+              age: !!(chk_map.age && chk_map.age.checked),
+              weight: !!(chk_map.weight && chk_map.weight.checked),
+              sex: !!(chk_map.sex && chk_map.sex.checked),
+              status: !!(chk_map.status && chk_map.status.checked),
+              pastLambing: !!(chk_map.pastLambing && chk_map.pastLambing.checked),
+              lastLambingDate: !!(chk_map.lastLambingDate && chk_map.lastLambingDate.checked),
+              bredDate: !!(chk_map.bredDate && chk_map.bredDate.checked),
+              daysUntil: !!(chk_map.daysUntil && chk_map.daysUntil.checked),
+              daysPost: !!(chk_map.daysPost && chk_map.daysPost.checked),
+              expectedDueDate: !!(chk_map.expectedDueDate && chk_map.expectedDueDate.checked),
+              actions: !!(chk_map.actions && chk_map.actions.checked)
+            };
+            if (typeof saveActionsColumns === 'function') saveActionsColumns(map, tab);
+            else saveDashboardColumns(map, tab);
+            modal.style.display = 'none';
+            buildTable(activeFilter, document.getElementById('actionsSearch').value || '');
+          } catch (e) { console.warn(e); }
+        });
+      } catch (e) { }
+
+      // Bulk-action wiring: operate on checked rows
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll('#actionsTable .row-checkbox:checked')).map(cb => cb.dataset.id).filter(Boolean);
+      }
+
+      function markSelected(status) {
+        const ids = getSelectedIds();
+        if (!ids || !ids.length) return alert('No sheep selected');
+        if (!confirm(`Mark ${ids.length} selected sheep as ${status.replace('-', ' ')}?`)) return;
+        let master = JSON.parse(localStorage.getItem('sheepList') || '[]');
+
+        if (status === 'sold') {
+          try {
+            if (typeof openSaleModal === 'function') {
+              openSaleModal(ids);
+              return;
+            }
+          } catch (e) { console.warn('openSaleModal failed', e); }
+        }
+
+        ids.forEach(id => {
+          try {
+            const raw = localStorage.getItem('sheep-' + id);
+            let s = raw ? JSON.parse(raw) : { id };
+            try { applySheepStatus(s, status); } catch (e) { s.status = status; }
+            localStorage.setItem('sheep-' + id, JSON.stringify(s));
+            const idx = master.findIndex(x => x && x.id === id);
+            if (idx !== -1) master[idx] = Object.assign({}, master[idx] || {}, s);
+            else master.push(s);
+          } catch (e) { console.warn(e); }
+        });
+        localStorage.setItem('sheepList', JSON.stringify(master));
+        computeCounts();
+        buildTable(activeFilter, document.getElementById('actionsSearch').value || '');
+        alert(`Marked ${ids.length} sheep as ${status.replace('-', ' ')}.`);
+      }
+
+      const bulkCulled = document.getElementById('bulkMarkCulledBtn');
+      const bulkTbc = document.getElementById('bulkMarkToBeCulledBtn');
+      const bulkSold = document.getElementById('bulkMarkSoldBtn');
+      if (bulkCulled) bulkCulled.addEventListener('click', () => markSelected('culled'));
+      if (bulkTbc) bulkTbc.addEventListener('click', () => markSelected('to-be-culled'));
+      if (bulkSold) bulkSold.addEventListener('click', () => markSelected('sold'));
+
+      // recompute counts when storage changes (simple polling + storage event)
+      window.addEventListener('storage', () => { computeCounts(); buildTable(activeFilter, document.getElementById('actionsSearch').value || ''); });
+      setInterval(() => { computeCounts(); }, 3000);
+    });
+  </script>
+</body>
+
+</html>

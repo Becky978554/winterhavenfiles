@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- crypto.randomUUID polyfill removed (consolidated in script.js) -->
+gap: 12px;
+align-items: center;
+justify-content: space-between;
+}
+
+.details-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 12px;
+margin-top: 12px;
+}
+
+.full-chart {
+background: #fff;
+padding: 12px;
+border-radius: 6px;
+border: 1px solid #eef2f7;
+}
+</style>
+<script>
+  (function () {
+    try {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+        crypto.randomUUID = function () {
+          try {
+            var getRandom = (crypto && typeof crypto.getRandomValues === 'function')
+              ? function (arr) { return crypto.getRandomValues(arr); }
+              : function (arr) { for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256); return arr; };
+            var arr = new Uint8Array(16);
+            getRandom(arr);
+            arr[6] = (arr[6] & 0x0f) | 0x40;
+            arr[8] = (arr[8] & 0x3f) | 0x80;
+            var hex = Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+            return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+          } catch (e) {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; var v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+          }
+        };
+      }
+    } catch (e) { }
+  })();
+</script>
+</head>
+
+<body>
+  <div class="container details-container">
+    <div class="details-hero">
+      <h2>Breeding — Details & Charts</h2>
+      <div><a href="index.html" class="button">Back to Dashboard</a></div>
+    </div>
+
+    <div id="breedingDetails" class="details-grid">
+      <!-- charts rendered by script.js -->
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    try { if (typeof renderBreedingDetails === 'function') renderBreedingDetails(); } catch (e) { console.warn(e); }
+  </script>
+</body>
+
+</html>

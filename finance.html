@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- crypto.randomUUID polyfill removed (consolidated in script.js) -->
+};
+}
+} catch (e) { }
+})();
+</script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Finances</h1>
+    <div style="display:flex; gap:8px; margin-bottom:12px; align-items:center;" role="navigation"
+      aria-label="Finance navigation">
+      <button id="btnIncome" class="button" type="button">Income</button>
+      <button id="btnOutput" class="button" type="button">Output</button>
+      <button id="btnBalance" class="button" type="button">Balance</button>
+      <div style="flex:1 1 auto"></div>
+      <a href="index.html" class="button">Back to Dashboard</a>
+    </div>
+
+    <div id="incomeSection" class="info-box" style="display:none;">
+      <h2>Income</h2>
+      <form id="incomeForm" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <label for="incomeDate" class="visually-hidden">Date</label>
+        <input aria-label="Income date" type="date" id="incomeDate" />
+        <label for="incomeAmount" class="visually-hidden">Amount</label>
+        <input aria-label="Income amount" type="number" step="0.01" id="incomeAmount" placeholder="Amount" />
+        <label for="incomeDesc" class="visually-hidden">Description</label>
+        <input aria-label="Income description" type="text" id="incomeDesc" placeholder="Description"
+          style="flex:1 1 200px;" />
+        <button id="incomeAdd" class="button button-primary" type="button" data-role="manager">Add Income</button>
+      </form>
+      <div style="margin-top:12px;">
+        <table class="report-table" id="incomeTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th style="text-align:right">Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="outputSection" class="info-box" style="display:none;">
+      <h2>Output / Expenses</h2>
+      <form id="outputForm" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <label for="outputDate" class="visually-hidden">Date</label>
+        <input aria-label="Expense date" type="date" id="outputDate" />
+        <label for="outputAmount" class="visually-hidden">Amount</label>
+        <input aria-label="Expense amount" type="number" step="0.01" id="outputAmount" placeholder="Amount" />
+        <label for="outputDesc" class="visually-hidden">Description</label>
+        <input aria-label="Expense description" type="text" id="outputDesc" placeholder="Description"
+          style="flex:1 1 200px;" />
+        <button id="outputAdd" class="button button-primary" type="button" data-role="manager">Add Expense</button>
+      </form>
+      <div style="margin-top:12px;">
+        <table class="report-table" id="outputTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th style="text-align:right">Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="balanceSection" class="info-box" style="display:none;">
+      <h2>Balance</h2>
+      <div style="display:flex; gap:16px; align-items:center;">
+        <div><strong>Total Income:</strong> <span id="totalIncome">$0.00</span></div>
+        <div><strong>Total Output:</strong> <span id="totalOutput">$0.00</span></div>
+        <div><strong>Balance:</strong> <span id="balanceAmt">$0.00</span></div>
+        <div style="flex:1 1 auto"></div>
+        <button id="exportCsv" class="button" type="button">Export All CSV</button>
+        <button id="exportIncomeCsv" class="button" type="button">Export Income CSV</button>
+        <button id="exportOutputCsv" class="button" type="button">Export Output CSV</button>
+        <button id="exportBalanceCsv" class="button" type="button">Export Balance CSV</button>
+        <button id="clearAll" class="button button-cancel" type="button" data-role="admin">Clear All</button>
+      </div>
+      <div style="margin-top:12px;">
+        <p>Below are recent entries:</p>
+        <table class="report-table" id="recentTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th style="text-align:right">Amount</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="finance.js"></script>
+  <script>window.addEventListener('DOMContentLoaded', initFinance);</script>
+</body>
+
+</html>

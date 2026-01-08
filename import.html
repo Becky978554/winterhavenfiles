@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Import Sheep CSV — Sheep Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Import Sheep CSV</h1>
+    <p style="color:#666">Upload a CSV file of sheep records, map columns, preview rows and import. An undo option is
+      available after import.</p>
+
+    <div id="topImportControls" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <label for="csvFile"><strong>CSV file</strong></label>
+      <input type="file" id="csvFile" accept=".csv" />
+      <label style="margin-left:8px;"><input type="checkbox" id="csvOverwriteTop"> Overwrite matching IDs</label>
+      <button id="importCsvBtnTop" class="button">Import</button>
+      <button id="downloadTemplateTop" class="button" type="button">Download CSV Template</button>
+      <button id="downloadTemplateWithDataTop" class="button" type="button">Download CSV Template (with current
+        animals)</button>
+      <a href="reports.html" class="button" style="margin-left:auto;">Back to Reports</a>
+    </div>
+
+    <div id="mappingArea" style="margin-top:12px; display:none; max-width:900px;">
+      <h3>Column mapping</h3>
+      <p style="color:#666;">Map CSV headers to application fields. `id` is required.</p>
+      <div id="mappingControls" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+      <div style="margin-top:8px;">
+        <button id="previewBtn" class="button">Preview</button>
+        <button id="importBtn" class="button-primary" style="margin-left:8px;">Import</button>
+        <label style="margin-left:8px;"><input type="checkbox" id="csvMerge"> Merge into existing (append
+          weights)</label>
+        <button id="undoBtn" class="button-cancel" style="margin-left:8px; display:none;">Undo Last Import</button>
+        <div class="container" role="main" aria-labelledby="importTitle">
+          <h1 id="importTitle">Import Sheep CSV</h1>
+          <p style="color:#666">Upload a CSV file of sheep records, map columns, preview rows and import. An undo option
+            is available after import.</p>
+
+          <div id="topImportControls"
+            style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;" role="region"
+            aria-label="Import controls">
+            <label for="csvFile"><strong>CSV file</strong></label>
+            <input aria-label="Choose CSV file to import" type="file" id="csvFile" accept=".csv" />
+            <label style="margin-left:8px;" for="csvOverwriteTop"><input type="checkbox" id="csvOverwriteTop"> Overwrite
+              matching IDs</label>
+            <button id="importCsvBtnTop" class="button" type="button">Import</button>
+            <button id="downloadTemplateTop" class="button" type="button">Download CSV Template</button>
+            <button id="downloadTemplateWithDataTop" class="button" type="button">Download CSV Template (with current
+              animals)</button>
+            <a href="reports.html" class="button" style="margin-left:auto;">Back to Reports</a>
+          </div>
+        </div>
+      </div>
+      <div id="previewArea" style="display:none; margin-top:12px; max-width:900px;">
+        <div id="previewErrors" style="white-space:pre-wrap; color:#b00; margin-bottom:8px;"></div>
+        <table id="previewTable" class="report-table" style="width:100%;">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="importSummary"
+        style="display:none; margin-top:12px; max-width:900px; border:1px solid #ddd; padding:12px; background:#fafafa;">
+      </div>
+
+      <script src="script.js"></script>
+      <script src="src/utils.js"></script>
+      <script>
+        (function () {
+          // Wire top download buttons if present (use global helper from script.js)
+          try {
+            const dl = document.getElementById('downloadTemplateTop');
+            const dlWith = document.getElementById('downloadTemplateWithDataTop');
+            if (dl) dl.addEventListener('click', () => { try { if (typeof generateTemplateCsv === 'function') generateTemplateCsv(false); else alert('Download helper not available.'); } catch (e) { console.warn(e); } });
+            if (dlWith) dlWith.addEventListener('click', () => { try { if (typeof generateTemplateCsv === 'function') generateTemplateCsv(true); else alert('Download helper not available.'); } catch (e) { console.warn(e); } });
+          } catch (e) { }
+
+          // Wire top import button to trigger the same flow as selecting a file
+          try {
+            const topImportBtn = document.getElementById('importCsvBtnTop');
+            const topFileInput = document.getElementById('csvFile');
+            const topOverwrite = document.getElementById('csvOverwriteTop');
+            if (topImportBtn && topFileInput) {
+              topImportBtn.addEventListener('click', () => {
+                const f = topFileInput.files && topFileInput.files[0];
+                if (!f) return alert('Please choose a CSV file to import.');
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  const text = e.target.result;
+                  // prefer script-level importer/preview if available
+                  try {
+                    if (typeof importSheepCsvWithPreview === 'function') {
+                      importSheepCsvWithPreview(text, !!(topOverwrite && topOverwrite.checked));
+                      return;
+                    }
+                  } catch (err) { }
+                  // fallback: populate mapping controls and preview using local parser
+                  try {
+                    // simulate file selection event so existing mapping code runs
+                    const ev = new Event('change');
+                    topFileInput.dispatchEvent(ev);
+                  } catch (err) { }
+                };
+                reader.onerror = () => alert('Failed to read file.');
+                reader.readAsText(f, 'utf-8');
+              });
+            }
+          } catch (e) { }
+          const csvFile = document.getElementById('csvFile');
+          const mappingArea = document.getElementById('mappingArea');
+          const mappingControls = document.getElementById('mappingControls');
+          const previewBtn = document.getElementById('previewBtn');
+          const importBtn = document.getElementById('importBtn');
+          const undoBtn = document.getElementById('undoBtn');
+          const previewArea = document.getElementById('previewArea');
+          const previewTable = document.getElementById('previewTable');
+          const previewErrors = document.getElementById('previewErrors');
+
+          // Known target fields (expanded to include common columns and synonyms)
+          const targets = ['id', 'name', 'sex', 'birthDate', 'age', 'breed', 'color', 'weight', 'weights', 'weightDate', 'bredDate', 'breedingDate', 'sire', 'dam', 'pedigree', 'status', 'expectedDueDate', 'notes', 'lambings'];
+
+          let rawText = '';
+          let rows = [];
+          let headers = [];
+
+          function buildMappingControls() {
+            mappingControls.innerHTML = '';
+            headers.forEach((h, idx) => {
+              const wrap = document.createElement('div');
+              wrap.style.minWidth = '220px';
+              const label = document.createElement('label'); label.style.display = 'block'; label.style.fontWeight = '600'; label.textContent = h;
+              const sel = document.createElement('select'); sel.dataset.col = String(idx);
+              const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '(ignore)'; sel.appendChild(emptyOpt);
+              targets.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); });
+              // attempt heuristics for common column names (accept 'colour' as synonym)
+              const heur = h.toLowerCase();
+              if (heur === 'id' || heur.indexOf('tag') !== -1 || heur.indexOf('id') === 0) sel.value = 'id';
+              if (heur === 'name' || heur.indexOf('name') !== -1) sel.value = sel.value || 'name';
+              if (heur.indexOf('sex') !== -1 || heur.indexOf('gender') !== -1) sel.value = sel.value || 'sex';
+              if (heur.indexOf('birth') !== -1 || heur.indexOf('dob') !== -1) sel.value = sel.value || 'birthDate';
+              if (heur.indexOf('breed') !== -1) sel.value = sel.value || 'breed';
+              if (heur.indexOf('color') !== -1 || heur.indexOf('colour') !== -1) sel.value = sel.value || 'color';
+              if (heur.indexOf('status') !== -1 || heur.indexOf('state') !== -1 || heur.indexOf('condition') !== -1) sel.value = sel.value || 'status';
+              if (heur.indexOf('weightdate') !== -1 || (heur.indexOf('date') !== -1 && heur.indexOf('weight') !== -1)) sel.value = sel.value || 'weightDate';
+              if (heur.indexOf('bred') !== -1 || heur.indexOf('breeding') !== -1 || heur.indexOf('breedings') !== -1) sel.value = sel.value || 'bredDate';
+              if (heur.indexOf('weight') !== -1 && heur.indexOf('weightdate') === -1) sel.value = sel.value || 'weight';
+              if (heur.indexOf('weights') !== -1 && heur.indexOf('weight') === -1) sel.value = sel.value || 'weights';
+              if (heur.indexOf('pedigree') !== -1) sel.value = sel.value || 'pedigree';
+              if (heur.indexOf('expected') !== -1 || heur.indexOf('due') !== -1) sel.value = sel.value || 'expectedDueDate';
+              if (heur.indexOf('lamb') !== -1) sel.value = sel.value || 'lambings';
+              if (heur.indexOf('age') !== -1 && heur.indexOf('stage') === -1) sel.value = sel.value || 'age';
+              wrap.appendChild(label); wrap.appendChild(sel);
+              mappingControls.appendChild(wrap);
+            });
+            // if no header columns (plain rows), provide mapping for positions
+            if (!headers.length && rows.length) {
+              const first = rows[0] || [];
+              first.forEach((cell, idx) => {
+                const wrap = document.createElement('div');
+                wrap.style.minWidth = '220px';
+                const label = document.createElement('label'); label.style.display = 'block'; label.style.fontWeight = '600'; label.textContent = 'Column ' + (idx + 1);
+                const sel = document.createElement('select'); sel.dataset.col = String(idx);
+                const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '(ignore)'; sel.appendChild(emptyOpt);
+                targets.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); });
+                wrap.appendChild(label); wrap.appendChild(sel);
+                mappingControls.appendChild(wrap);
+              });
+            }
+          }
+
+          function readFileAsText(file, cb) {
+            const r = new FileReader();
+            r.onload = () => cb(null, r.result);
+            r.onerror = () => cb(new Error('Failed to read file'));
+            r.readAsText(file);
+          }
+
+          csvFile.addEventListener('change', (ev) => {
+            const f = csvFile.files && csvFile.files[0];
+            if (!f) return;
+            readFileAsText(f, (err, text) => {
+              if (err) return alert('Failed to read file');
+              rawText = text;
+              rows = (window.parseCSV ? window.parseCSV(text) : []);
+              if (!rows.length) return alert('CSV appears empty or could not be parsed.');
+              // determine if first row is header: if any non-numeric values or non-date-like
+              const first = rows[0].map(c => (c || '').trim());
+              const isHeader = first.some(c => /[A-Za-z]/.test(c));
+              if (isHeader) {
+                headers = first;
+                rows = rows.slice(1);
+              } else {
+                headers = [];
+              }
+              mappingArea.style.display = 'block';
+              buildMappingControls();
+            });
+          });
+
+          function buildMappedRows() {
+            // construct mapping from controls
+            const selEls = mappingControls.querySelectorAll('select');
+            const mapByCol = {};
+            selEls.forEach(s => { if (s.value) mapByCol[s.dataset.col] = s.value; });
+            const mapped = [];
+            for (let r = 0; r < rows.length; r++) {
+              const row = rows[r];
+              const obj = {};
+              Object.keys(mapByCol).forEach(col => {
+                const target = mapByCol[col];
+                const val = row[Number(col)];
+                if (typeof val !== 'undefined') obj[target] = (val || '').trim();
+              });
+
+              // Heuristic: if weight exists but no weightDate, and there's an unmapped header
+              // that looks like a date (e.g. "date", "measurement date"), assume that
+              // header contains the weight date for this row.
+              try {
+                const hasWeight = typeof obj.weight !== 'undefined' && String(obj.weight).trim() !== '';
+                const hasWeightDate = typeof obj.weightDate !== 'undefined' && String(obj.weightDate).trim() !== '';
+                if (hasWeight && !hasWeightDate && Array.isArray(headers) && headers.length) {
+                  for (let ci = 0; ci < headers.length; ci++) {
+                    // skip columns the user explicitly mapped
+                    if (Object.prototype.hasOwnProperty.call(mapByCol, String(ci))) continue;
+                    const h = String(headers[ci] || '').toLowerCase();
+                    if (!h) continue;
+                    if (/\b(date|measurement date|sample date|date taken|recorded date|recorded)\b/.test(h) || h === 'date') {
+                      const cand = row[ci];
+                      if (typeof cand !== 'undefined' && String(cand || '').trim() !== '') {
+                        obj.weightDate = String(cand).trim();
+                        break;
+                      }
+                    }
+                  }
+                }
+              } catch (e) { /* non-fatal */ }
+
+              mapped.push(obj);
+            }
+            return mapped;
+          }
+
+          function preview() {
+            const mapped = buildMappedRows();
+            // show top 20
+            const sample = mapped.slice(0, 20);
+            previewTable.tHead.innerHTML = '';
+            previewTable.tBodies[0].innerHTML = '';
+            const headRow = document.createElement('tr');
+            // collect columns to show from targets present
+            const cols = new Set();
+            sample.forEach(s => Object.keys(s || {}).forEach(k => cols.add(k)));
+            const colsArr = Array.from(cols);
+            if (!colsArr.length) {
+              previewErrors.textContent = 'No columns mapped. Please map at least `id`.';
+              previewArea.style.display = 'none';
+              return;
+            }
+            colsArr.forEach(c => { const th = document.createElement('th'); th.textContent = c; headRow.appendChild(th); });
+            previewTable.tHead.appendChild(headRow);
+            const errors = [];
+            sample.forEach((s, idx) => {
+              const tr = document.createElement('tr');
+              colsArr.forEach(c => {
+                const td = document.createElement('td'); td.textContent = s[c] || '';
+                tr.appendChild(td);
+              });
+              previewTable.tBodies[0].appendChild(tr);
+              // validate
+              const rowErrors = window.validateMappedRow ? window.validateMappedRow(s) : [];
+              if (rowErrors && rowErrors.length) errors.push('Row ' + (idx + 1) + ': ' + rowErrors.join('; '));
+            });
+            if (errors.length) previewErrors.textContent = errors.slice(0, 10).join('\n'); else previewErrors.textContent = '';
+            previewArea.style.display = 'block';
+          }
+
+          previewBtn.addEventListener('click', (ev) => {
+            ev && ev.preventDefault();
+            try { preview(); } catch (e) { alert('Preview failed: ' + String(e)); }
+          });
+
+          importBtn.addEventListener('click', (ev) => {
+            ev && ev.preventDefault();
+            if (!confirm('Import will create/overwrite sheep records in localStorage. Continue?')) return;
+            const mapped = buildMappedRows();
+            const built = (mapped.map ? mapped.map(m => (window.buildSheepFromMapped ? window.buildSheepFromMapped(m) : m)) : []);
+            const overwrite = (document.getElementById('csvOverwriteTop') && document.getElementById('csvOverwriteTop').checked) || false;
+            const merge = (document.getElementById('csvMerge') && document.getElementById('csvMerge').checked) || false;
+            const res = window.performImport ? window.performImport(built, { merge: merge, overwrite: overwrite }) : [];
+            // support legacy array return (created keys) or new detailed report
+            let report = null;
+            if (res && Array.isArray(res)) {
+              report = { created: res, merged: [], overwritten: [], skipped: [], details: {} };
+            } else if (res && res.created !== undefined) {
+              report = res;
+            } else {
+              report = { created: [], merged: [], overwritten: [], skipped: [], details: {} };
+            }
+
+            const summaryEl = document.getElementById('importSummary');
+            if (summaryEl) {
+              const createdN = (report.created || []).length;
+              const mergedN = (report.merged || []).length;
+              const overwrittenN = (report.overwritten || []).length;
+              const skippedN = (report.skipped || []).length;
+              let html = '<strong>Import Summary</strong><div style="margin-top:8px;">';
+              html += '<div><strong>New:</strong> ' + createdN + '</div>';
+              html += '<div><strong>Merged:</strong> ' + mergedN + '</div>';
+              html += '<div><strong>Overwritten:</strong> ' + overwrittenN + '</div>';
+              html += '<div><strong>Skipped:</strong> ' + skippedN + '</div>';
+              html += '</div>';
+              // small details table (show up to 50 entries)
+              const ids = Object.keys(report.details || {});
+              if (ids.length) {
+                html += '<div style="margin-top:8px;"><table class="report-table" style="width:100%;"><thead><tr><th>ID</th><th>Action</th><th>Details</th></tr></thead><tbody>';
+                ids.slice(0, 50).forEach(id => {
+                  const d = report.details[id] || {};
+                  let detailsTxt = '';
+                  if (d.addedFields && d.addedFields.length) detailsTxt += 'Added fields: ' + d.addedFields.join(', ') + '. ';
+                  if (d.addedWeightDates && d.addedWeightDates.length) detailsTxt += 'Added weights: ' + d.addedWeightDates.join(', ') + '. ';
+                  if (d.overwrittenFields && d.overwrittenFields.length) detailsTxt += 'Overwritten: ' + d.overwrittenFields.join(', ') + '. ';
+                  html += '<tr><td>' + id + '</td><td>' + (d.action || '') + '</td><td>' + detailsTxt + '</td></tr>';
+                });
+                html += '</tbody></table></div>';
+                if (ids.length > 50) html += '<div style="margin-top:6px; color:#666;">...showing first 50 of ' + ids.length + ' items</div>';
+              }
+              summaryEl.innerHTML = html;
+              summaryEl.style.display = 'block';
+            }
+
+            // show undo button if any items were created/overwritten/merged
+            if ((report.created && report.created.length) || (report.overwritten && report.overwritten.length) || (report.merged && report.merged.length)) {
+              undoBtn.style.display = 'inline-block';
+            }
+            alert('Import completed. ' + ((report.created || []).length) + ' new, ' + ((report.merged || []).length) + ' merged, ' + ((report.overwritten || []).length) + ' overwritten, ' + ((report.skipped || []).length) + ' skipped.');
+          });
+
+          undoBtn.addEventListener('click', (ev) => {
+            ev && ev.preventDefault();
+            if (!confirm('Undo last import? This will attempt to restore overwritten entries and remove newly created ones.')) return;
+            const res = window.undoLastImport ? window.undoLastImport() : { restored: 0 };
+            alert('Undo completed. Restored items: ' + (res.restored || 0));
+            undoBtn.style.display = 'none';
+          });
+
+          // detect existing last import to show undo button
+          try { const last = sessionStorage.getItem('lastImport_created'); if (last) undoBtn.style.display = 'inline-block'; } catch (e) { }
+
+        })();
+      </script>
+</body>
+
+</html>

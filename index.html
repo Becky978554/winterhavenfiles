@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sheep Management</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- crypto.randomUUID polyfill removed (consolidated in script.js) -->
+</head>
+
+<body>
+  <div class="container">
+    <h1 id="pageTitle">Sheep Management Dashboard</h1>
+    <!-- Mobile-only Debug banner -->
+    <div id="debugBanner" aria-hidden="false">Debug: initializing…</div>
+    <script>
+      (function () {
+        try {
+          var isMobile = false;
+          try { isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth && window.innerWidth <= 768); } catch (e) { }
+          var banner = document.getElementById('debugBanner');
+          if (!isMobile) {
+            if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+            return;
+          }
+          banner.style.display = 'block';
+          function countLocal() {
+            var keys = 0;
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              if (k && (k + '').indexOf('sheep-') === 0) keys++;
+            }
+            var listLen = 0;
+            try { var p = JSON.parse(localStorage.getItem('sheepList') || '[]'); if (Array.isArray(p)) listLen = p.length; } catch (e) { }
+            return { keys: keys, list: listLen };
+          }
+          var initial = countLocal();
+          var bundleLen = (window.__initialSheepData && Array.isArray(window.__initialSheepData)) ? window.__initialSheepData.length : 0;
+          function render(st) { banner.textContent = 'Bundle:' + bundleLen + ' · Local(list):' + st.list + ' · Keys:' + st.keys + (st.imported != null ? (' · Imported:+' + st.imported) : ''); }
+          render(initial);
+          window.addEventListener('sheep-updated', function () {
+            var after = countLocal();
+            var imported = Math.max(0, after.list - initial.list);
+            render({ list: after.list, keys: after.keys, imported: imported });
+            setTimeout(function () { if (banner) banner.classList.add('hidden'); setTimeout(function () { try { banner.remove(); } catch (e) { } }, 900); }, 30000);
+          });
+          setTimeout(function () { if (banner) banner.classList.add('hidden'); setTimeout(function () { try { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); } catch (e) { } }, 900); }, 30000);
+        } catch (e) { }
+      })();
+    </script>
+
+    <div class="top-controls">
+      <div class="left">
+        <!-- Import controls moved to Reports page -->
+      </div>
+      <div class="spacer"></div>
+      <div class="right">
+
+        <!-- Bulk toolbar removed: actions are shown as tabs under Actions button -->
+        <div id="topActionShortcuts" class="top-action-shortcuts">
+          <a id="addSheepBtn" class="button button-primary" role="button">+ Add New Sheep</a>
+          <a id="addLambingBtn" class="button" role="button">+ Record Lambing</a>
+          <a class="button" href="actions.html">Your Animals</a>
+          <a class="button" href="finance.html">Finances</a>
+          <a class="button" href="settings.html">Settings</a>
+          <a class="button" href="reports.html">Write Reports</a>
+          <a class="button" href="users.html" data-role="admin">User Management</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lambing Modal -->
+    <div id="lambingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="lambingClose">&times;</span>
+        <h2>Record Lambing</h2>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingCount"><strong>Number of lambs:</strong></label>
+          <select id="lambingCount" style="display:block; margin-top:6px; padding:6px;">
+            <option value="1">Single (1)</option>
+            <option value="2">Twin (2)</option>
+            <option value="3">Triplet (3)</option>
+            <option value="other">Other (4+)</option>
+          </select>
+          <input type="number" id="lambingCountOther" min="4" placeholder="Enter number (4+)"
+            style="display:none; margin-top:6px; padding:6px;" />
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingDate"><strong>Birth Date:</strong></label>
+          <input type="date" id="lambingDate" style="display:block; margin-top:6px; padding:6px;" />
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingMother"><strong>Mother (Ewe):</strong></label>
+          <select id="lambingMother" style="display:block; margin-top:6px; padding:6px; width:100%;"></select>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label for="lambingSire"><strong>Father (Ram) — optional:</strong></label>
+          <select id="lambingSire" style="display:block; margin-top:6px; padding:6px; width:100%;"></select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label for="lambingDefaultWeight"><strong>Default birth weight (lbs) — apply to all lambs if left
+              blank:</strong></label>
+          <input type="number" id="lambingDefaultWeight" placeholder="e.g., 8.5"
+            style="display:block; margin-top:6px; padding:6px;" />
+        </div>
+
+        <div id="lambChildrenContainer" style="margin-bottom:8px;">
+          <!-- dynamically generated lamb tag/name inputs will appear here -->
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+          <button id="lambingCancel" class="button-cancel">Cancel</button>
+          <button id="lambingConfirmBtn" class="button-primary">Record Lambing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breeding summary: counts and near-due list -->
+    <div id="breedingSummary"
+      style="margin:12px 0;padding:12px;background:#fff;border:1px solid #eee;border-radius:6px;">
+      <!-- populated by script.js -->
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+        <label for="breedingTimeWindowSelect" style="font-weight:600;">Time window:</label>
+        <select id="breedingTimeWindowSelect" style="padding:6px;">
+          <option value="thisYear">This year</option>
+          <option value="year">Specific year</option>
+          <option value="last12">Last 12 months</option>
+          <option value="custom">Custom range</option>
+        </select>
+        <div id="breedingYearWrap" style="display:none;align-items:center;gap:8px;">
+          <label style="font-size:13px;color:#444;">Year</label>
+          <select id="breedingYearSelect" style="padding:6px;"></select>
+        </div>
+        <div id="breedingCustomRange" style="display:none;align-items:center;gap:8px;">
+          <label style="font-size:13px;color:#444;">From</label>
+          <input type="date" id="breedingCustomStart" style="padding:6px;" />
+          <label style="font-size:13px;color:#444;">To</label>
+          <input type="date" id="breedingCustomEnd" style="padding:6px;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Your Animals table and tabs removed from dashboard — moved to animals.html -->
+
+
+    <!-- Bulk actions row beneath import controls: moved into top-controls -->
+
+    <!-- Modal for adding new sheep -->
+    <div id="sheepModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>Add New Sheep</h2>
+        <form id="sheepForm">
+          <label for="sheepName">Name / Ear Tag:</label>
+          <input type="text" id="sheepName" required>
+
+          <label for="sheepBreed">Breed:</label>
+          <input type="text" id="sheepBreed" placeholder="e.g., Katahdin">
+
+          <label for="sheepColor">Colour:</label>
+          <select id="sheepColor">
+            <option value="">Unknown</option>
+            <option>Black with Brown and White</option>
+            <option>Chocolate Brown</option>
+            <option>Light Brown</option>
+            <option>Med Brown</option>
+            <option>Red</option>
+            <option>Red and White</option>
+            <option>White</option>
+            <option>White Speckled Black</option>
+            <option>White Speckled Brown</option>
+            <option>Other DNAs</option>
+            <option>Black</option>
+            <option>Black and White</option>
+            <option>Brown and White</option>
+            <option>Brown Speckled White</option>
+            <option>Tan</option>
+            <option>White Darkening</option>
+            <option>White Speckled Red</option>
+            <option value="__other__">Other — enter...</option>
+          </select>
+          <input type="text" id="sheepColorOther" placeholder="Enter custom colour"
+            style="display:none;margin-top:6px;">
+
+          <label for="sheepSex">Sex:</label>
+          <select id="sheepSex">
+            <option value="Unknown">Unknown</option>
+            <option value="Ewe">Ewe</option>
+            <option value="Ram">Ram</option>
+          </select>
+
+          <label for="sheepStatus">Status:</label>
+          <select id="sheepStatus">
+            <option value="active">Active</option>
+            <option value="to-be-culled">To Be Culled</option>
+            <option value="culled">Culled</option>
+            <option value="sold">Sold</option>
+            <option value="archived">Archived</option>
+          </select>
+
+          <label for="sheepAge">Age:</label>
+          <input type="text" id="sheepAge" placeholder="e.g., 2 years">
+
+          <label for="sheepWeight">Weight (lbs):</label>
+          <input type="number" id="sheepWeight" placeholder="130">
+
+          <label for="sheepBirthDate">Birth Date:</label>
+          <input type="date" id="sheepBirthDate">
+
+          <label for="sheepNotes">Notes:</label>
+          <textarea id="sheepNotes" placeholder="Healthy, lambed twice..."></textarea>
+
+          <div class="modal-buttons">
+            <button type="submit" class="button-primary">Save Sheep</button>
+            <button type="button" class="button-cancel" id="cancelBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CSV Import Preview Modal -->
+    <div id="csvPreviewModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="csvPreviewClose">&times;</span>
+        <h2>CSV Import Preview</h2>
+        <div id="csvPreviewSummary" style="margin-bottom:8px;"></div>
+        <div style="max-height:350px; overflow:auto; border:1px solid #ddd; padding:8px; background:#fff;">
+          <table id="csvPreviewTable" class="report-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Breed</th>
+                <th>Colour</th>
+                <th>Sex</th>
+                <th>Birth Date</th>
+                <th>Breeding Date</th>
+                <th>Expected Due</th>
+                <th>Weight</th>
+                <th>Notes</th>
+                <th>Lambings</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+          <button id="csvCancelPreviewBtn" class="button-cancel">Cancel</button>
+          <button id="csvConfirmBtn" class="button-primary">Confirm Import</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breeding Modal -->
+    <div id="breedingModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="breedingClose">&times;</span>
+        <h2 id="breedingModalTitle">Record Breeding</h2>
+        <div style="margin-bottom:8px;">
+          <label for="breedingSire"><strong>Select Sire (Ram):</strong></label>
+          <select id="breedingSire" style="width:100%; padding:8px; margin-top:6px;"></select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label for="breedingDate"><strong>Bred Date:</strong></label>
+          <input type="date" id="breedingDate" style="display:block; margin-top:6px;">
+        </div>
+        <div id="breedingTargets" style="margin-bottom:8px; color:#555;"></div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+          <button id="breedingCancel" class="button-cancel">Cancel</button>
+          <button id="breedingConfirmBtn" class="button-primary">Apply Breeding</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sale Modal -->
+    <div id="saleModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="saleModalClose">&times;</span>
+        <h2>Record Sale</h2>
+        <div style="margin-top:8px;">
+          <div style="margin-bottom:8px;">
+            <label><input type="radio" name="saleMode" value="bulk" checked> Bulk sale (one total price)</label>
+            <label style="margin-left:12px;"><input type="radio" name="saleMode" value="per"> Per-animal prices</label>
+          </div>
+          <div id="saleBulkRow" style="margin-bottom:8px;">
+            <label for="saleBulkPrice"><strong>Total sale amount:</strong></label>
+            <input id="saleBulkPrice" type="text" placeholder="e.g. 1200" style="margin-left:8px;padding:6px;" />
+          </div>
+          <div id="salePerAnimalRow" style="margin-bottom:8px; display:none;">
+            <div id="salePerAnimalContainer"
+              style="max-height:220px; overflow:auto; border:1px solid #eee; padding:6px; background:#fff;"></div>
+          </div>
+          <div style="margin-bottom:8px;color:#555;"><strong>Selected animals:</strong> <span
+              id="saleSelectedList"></span></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button id="saleCancelBtn" class="button-cancel">Cancel</button>
+          <button id="saleConfirmBtn" class="button-primary">Confirm Sale</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom import controls and duplicate report link removed (moved to top-controls) -->
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('importedFromRepo')) {
+          try {
+            // If an inline bundle is present and looks complete, use it; otherwise avoid bootstrapping from a small incomplete set.
+            if (window.__initialSheepData && Array.isArray(window.__initialSheepData) && window.__initialSheepData.length >= 100) {
+              writeSheep(window.__initialSheepData);
+            } else {
+              // Fallback: try multiple candidate paths for aggregated JSON
+              (async function () {
+                try {
+                  async function tryFetchCandidates(cands) {
+                    for (let u of cands) {
+                      try {
+                        const res = await fetch(u, { cache: 'no-store' });
+                        if (res && res.ok) {
+                          const arr = await res.json();
+                          if (Array.isArray(arr) && arr.length) return arr;
+                        }
+                      } catch (e) { }
+                    }
+                    return null;
+                  }
+                  const candidates = ['https://raw.githubusercontent.com/Becky978554/winterhavenfiles/main/docs/data/sheep.json', './data/sheep.json', 'data/sheep.json', 'docs/data/sheep.json', '/winterhavenfiles/data/sheep.json'];
+                  const arr = await tryFetchCandidates(candidates);
+                  if (arr && arr.length) writeSheep(arr);
+                } catch (e) { console.warn('bootstrap multi-fetch failed', e); }
+              })();
+            }
+          } catch (e) { console.warn('bootstrap import failed', e); }
+        }
+      } catch (e) { console.warn('bootstrap import failed', e) }
+
+      function writeSheep(list) {
+        if (!list || !list.length) return;
+        try {
+          var existingRaw = localStorage.getItem('sheepList');
+          var masterObjects = [];
+          try {
+            var parsed = existingRaw ? JSON.parse(existingRaw) : [];
+            if (Array.isArray(parsed) && parsed.length && typeof parsed[0] === 'object') masterObjects = parsed.slice();
+          } catch (e) { masterObjects = []; }
+
+          list.forEach(function (s) {
+            try {
+              var id = s.id || s._id || ('sheep-' + Math.random());
+              if (("" + id).indexOf('sheep-') !== 0) id = 'sheep-' + id;
+              s.id = id.replace(/^sheep-/, '') || s.id;
+              var key = id;
+              localStorage.setItem(key, JSON.stringify(s));
+              var exists = masterObjects.some(function (m) { return m && (m.id || '').toString() === (s.id || '').toString(); });
+              if (!exists) masterObjects.push(s);
+            } catch (e) { }
+          });
+          localStorage.setItem('sheepList', JSON.stringify(masterObjects));
+          localStorage.setItem('importedFromRepo', new Date().toISOString());
+          try { window.dispatchEvent(new Event('sheep-updated')); } catch (e) { }
+          console.log('Bootstrapped', list.length, 'sheep into localStorage');
+        } catch (e) { console.warn('writeSheep failed', e) }
+      }
+    })();
+  </script>
+</body>
+
+</html>

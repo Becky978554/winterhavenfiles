@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Automatic Import — Sheep Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Automatic Import</h1>
+    <p>This page will import <strong>sample-import-breeding.csv</strong> into localStorage using the app's CSV importer.
+      Use this if you want to quickly restore sample data to the browser.</p>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:12px;">
+      <label style="display:flex; gap:8px; align-items:center;">
+        <input type="checkbox" id="backupBefore" checked />
+        <span>Backup existing sheep data before overwrite</span>
+      </label>
+      <label style="display:flex; gap:8px; align-items:center; margin-left:12px;">
+        <input type="checkbox" id="clearBefore" />
+        <span>Clear existing sheep records before import</span>
+      </label>
+      <button id="runImport" class="button-primary">Run Import Now (overwrite)</button>
+      <a href="reports.html" class="button">Back to Reports</a>
+    </div>
+
+    <div id="status" style="margin-top:12px;color:#333"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="src/utils.js"></script>
+  <script>
+    // Direct CSV import implementation: parses CSV and writes sheep-<id> records
+    document.getElementById('runImport').addEventListener('click', async function () {
+      const status = document.getElementById('status');
+      const doBackup = !!document.getElementById('backupBefore').checked;
+      const doClear = !!document.getElementById('clearBefore').checked;
+      status.textContent = 'Fetching CSV...';
+      try {
+        const res = await fetch('sample-import-breeding.csv');
+        if (!res.ok) throw new Error('Failed to fetch CSV: ' + res.status);
+        const text = await res.text();
+        status.textContent = 'Parsing CSV...';
+        const rows = parseCSVText(text);
+        if (!rows || !rows.length) { status.textContent = 'CSV parsing returned no rows.'; return; }
+        let headers = [];
+        const first = rows[0].map(c => (c || '').trim());
+        const isHeader = first.some(c => /[A-Za-z]/.test(c));
+        if (isHeader) { headers = first; rows.splice(0, 1); }
+
+        // Backup existing sheep data if requested
+        if (doBackup) {
+          status.textContent = 'Backing up existing sheep data...';
+          const data = {};
+          Object.keys(localStorage).filter(k => k.startsWith('sheep-') || k === 'sheepList').forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch (e) { data[k] = localStorage.getItem(k); } });
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'sheep-localstorage-backup.json'; document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        if (doClear) {
+          status.textContent = 'Clearing existing sheep- keys...';
+          try {
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('sheep-') || k === 'sheepList');
+            keys.forEach(k => localStorage.removeItem(k));
+          } catch (e) { /* ignore */ }
+        }
+
+        status.textContent = 'Importing rows...';
+        const mapping = buildMappingFromHeaders(headers);
+        const created = [];
+        for (let r = 0; r < rows.length; r++) {
+          const row = rows[r];
+          const obj = {};
+          if (headers.length) {
+            headers.forEach((h, idx) => {
+              const key = (h || '').trim().toLowerCase();
+              const v = (row[idx] || '').trim();
+              if (!v) return;
+              if (key.indexOf('id') !== -1 || key.indexOf('tag') !== -1) obj.id = v;
+              else if (key.indexOf('name') !== -1) obj.name = v;
+              else if (key.indexOf('sex') !== -1) obj.sex = v;
+              else if (key.indexOf('birth') !== -1 || key.indexOf('dob') !== -1) obj.birthDate = v;
+              else if (key.indexOf('weight') !== -1) obj.weight = v;
+              else if (key.indexOf('sire') !== -1) obj.sire = v;
+              else if (key.indexOf('dam') !== -1) obj.dam = v;
+              else if (key.indexOf('status') !== -1) obj.status = v;
+              else if (key.indexOf('note') !== -1) obj.notes = v;
+            });
+          } else {
+            // fallback: use mapping heuristics if no headers
+            Object.keys(mapping).forEach(idx => { const t = mapping[idx]; obj[t] = (row[Number(idx)] || '').trim(); });
+          }
+          // ensure id
+          if (!obj.id) {
+            try { obj.id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('id-' + Math.random().toString(36).slice(2, 9)); } catch (e) { obj.id = 'id-' + Math.random().toString(36).slice(2, 9); }
+          }
+          // normalize fields
+          if (obj.weight !== undefined) { const num = Number(String(obj.weight).replace(/[^0-9.\-]/g, '')); if (!isNaN(num)) obj.weight = num; }
+          // set weights array from current weight
+          if (obj.weight !== undefined && obj.weight !== null && obj.weight !== '') {
+            const date = new Date().toISOString().slice(0, 10);
+            obj.weights = [{ date: date, weight: Number(obj.weight) }];
+          }
+          // persist
+          try {
+            localStorage.setItem('sheep-' + obj.id, JSON.stringify(obj));
+            created.push(obj.id);
+          } catch (e) { console.warn('Failed to save', e); }
+        }
+
+        // rebuild master list from sheep- keys
+        const all = [];
+        Object.keys(localStorage).filter(k => k.indexOf('sheep-') === 0).forEach(k => {
+          try { const s = JSON.parse(localStorage.getItem(k)); if (s) all.push(s); } catch (e) { }
+        });
+        // sort active first then name
+        all.sort((a, b) => {
+          const ast = (String(a.status || '').toLowerCase() === 'active') ? 0 : 1;
+          const bst = (String(b.status || '').toLowerCase() === 'active') ? 0 : 1;
+          if (ast !== bst) return ast - bst;
+          return (String(a.name || '')).localeCompare(String(b.name || ''));
+        });
+        localStorage.setItem('sheepList', JSON.stringify(all));
+
+        status.textContent = 'Import complete. Created/updated ' + created.length + ' records. Reloading...';
+        setTimeout(() => window.location.reload(), 900);
+      } catch (err) {
+        status.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
+      }
+    });
+
+    function buildMappingFromHeaders(headers) {
+      const map = {};
+      headers.forEach((h, idx) => {
+        const key = (h || '').toLowerCase();
+        if (key.indexOf('id') !== -1 || key.indexOf('tag') !== -1) map[idx] = 'id';
+        else if (key.indexOf('name') !== -1) map[idx] = 'name';
+        else if (key.indexOf('sex') !== -1) map[idx] = 'sex';
+        else if (key.indexOf('birth') !== -1 || key.indexOf('dob') !== -1) map[idx] = 'birthDate';
+        else if (key.indexOf('weight') !== -1) map[idx] = 'weight';
+        else if (key.indexOf('sire') !== -1) map[idx] = 'sire';
+        else if (key.indexOf('dam') !== -1) map[idx] = 'dam';
+        else if (key.indexOf('status') !== -1) map[idx] = 'status';
+        else if (key.indexOf('note') !== -1) map[idx] = 'notes';
+      });
+      return map;
+    }
+
+    // Simple CSV parser that handles quoted fields
+    function parseCSVText(text) {
+      const rows = [];
+      let cur = '';
+      let row = [];
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+          if (inQuotes && text[i + 1] === '"') { cur += '"'; i++; continue; }
+          inQuotes = !inQuotes; continue;
+        }
+        if (ch === ',' && !inQuotes) { row.push(cur); cur = ''; continue; }
+        if ((ch === '\n' || ch === '\r') && !inQuotes) {
+          if (cur !== '' || row.length) { row.push(cur); rows.push(row); row = []; cur = ''; }
+          // handle CRLF
+          if (ch === '\r' && text[i + 1] === '\n') { i++; }
+          continue;
+        }
+        cur += ch;
+      }
+      if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+      return rows.filter(r => r.length > 0);
+    }
+  </script>
+</body>
+
+</html>
